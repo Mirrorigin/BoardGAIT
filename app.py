@@ -16,11 +16,18 @@ def start_game():
     player_names = data.get("players")
     try:
         initialize_game(player_names)
+
+        # Generate identity and word info. for each player
+        player_info = {}
+        for i, player_name in enumerate(game_state["players"]):
+            role = game_state["roles"][i]
+            word = game_state["words"][role]
+            player_info[player_name] = {"role": role, "word": word}
+
+        # Returns message for all players
         return jsonify({
             "message": "Game started!",
-            "roles": "Assigned (hidden)",
-            "words": game_state["words"],
-            "players": game_state["players"]
+            "player_info": player_info  # 每个玩家通过前端只看到自己的信息
         })
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

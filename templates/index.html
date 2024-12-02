@@ -48,21 +48,18 @@
         <button onclick="startGame()">Start Game</button>
     </div>
 
-    <h2>Describe Your Word</h2>
-    <input type="text" id="player-name" placeholder="Player Name">
-    <input type="text" id="description" placeholder="Description">
-    <button onclick="submitDescription()">Submit Description</button>
-
-    <h2>Vote</h2>
-    <input type="text" id="voter-name" placeholder="Your Name">
-    <input type="text" id="vote-target" placeholder="Vote Target">
-    <button onclick="submitVote()">Submit Vote</button>
+    <h2>Your Identity</h2>
+    <div id="identity">
+        <!-- Identity information will appear here -->
+    </div>
 
     <div id="game-log">
         <h3>Game Log</h3>
     </div>
 
     <script>
+        let playerName = prompt("Enter your name:"); // Prompt to input player name
+
         async function startGame() {
             const players = ["Alice", "Bob", "Charlie", "David"]; // Example player names
             const response = await fetch('/start_game', {
@@ -71,32 +68,16 @@
                 body: JSON.stringify({ players: players })
             });
             const data = await response.json();
-            logMessage("Game started!");
-            logMessage(JSON.stringify(data, null, 2));
-        }
-
-        async function submitDescription() {
-            const player = document.getElementById('player-name').value;
-            const description = document.getElementById('description').value;
-            const response = await fetch('/describe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ player: player, description: description })
-            });
-            const data = await response.json();
-            logMessage(data.message);
-        }
-
-        async function submitVote() {
-            const voter = document.getElementById('voter-name').value;
-            const target = document.getElementById('vote-target').value;
-            const response = await fetch('/vote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ voter: voter, target: target })
-            });
-            const data = await response.json();
-            logMessage(data.message);
+            if (data.player_info && data.player_info[playerName]) {
+                const playerIdentity = data.player_info[playerName];
+                document.getElementById("identity").innerHTML = `
+                    <p><strong>Role:</strong> ${playerIdentity.role}</p>
+                    <p><strong>Word:</strong> ${playerIdentity.word}</p>
+                `;
+                logMessage("Game started! Your role and word are shown above.");
+            } else {
+                logMessage("Game started, but you are not a player.");
+            }
         }
 
         function logMessage(message) {
