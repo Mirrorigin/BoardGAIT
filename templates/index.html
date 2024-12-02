@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who is the Undercover</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        #game-log {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body>
+    <h1>Who is the Undercover</h1>
+    <div>
+        <button onclick="startGame()">Start Game</button>
+    </div>
+
+    <h2>Describe Your Word</h2>
+    <input type="text" id="player-name" placeholder="Player Name">
+    <input type="text" id="description" placeholder="Description">
+    <button onclick="submitDescription()">Submit Description</button>
+
+    <h2>Vote</h2>
+    <input type="text" id="voter-name" placeholder="Your Name">
+    <input type="text" id="vote-target" placeholder="Vote Target">
+    <button onclick="submitVote()">Submit Vote</button>
+
+    <div id="game-log">
+        <h3>Game Log</h3>
+    </div>
+
+    <script>
+        async function startGame() {
+            const players = ["Alice", "Bob", "Charlie", "David"]; // Example player names
+            const response = await fetch('/start_game', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ players: players })
+            });
+            const data = await response.json();
+            logMessage("Game started!");
+            logMessage(JSON.stringify(data, null, 2));
+        }
+
+        async function submitDescription() {
+            const player = document.getElementById('player-name').value;
+            const description = document.getElementById('description').value;
+            const response = await fetch('/describe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ player: player, description: description })
+            });
+            const data = await response.json();
+            logMessage(data.message);
+        }
+
+        async function submitVote() {
+            const voter = document.getElementById('voter-name').value;
+            const target = document.getElementById('vote-target').value;
+            const response = await fetch('/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ voter: voter, target: target })
+            });
+            const data = await response.json();
+            logMessage(data.message);
+        }
+
+        function logMessage(message) {
+            const log = document.getElementById('game-log');
+            const logEntry = document.createElement('p');
+            logEntry.textContent = message;
+            log.appendChild(logEntry);
+        }
+    </script>
+</body>
+</html>
