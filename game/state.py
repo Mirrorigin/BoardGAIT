@@ -59,7 +59,7 @@ def initialize_game():
     game_state["descriptions"] = {player: None for player in game_state["players"]}
     game_state["votes"] = {player: 0 for player in game_state["players"]}
     game_state["eliminated"] = []
-    game_state["current_turn"] = 0
+    game_state["current_turn"] = 1
     game_state["game_over"] = False
     game_state["winner"] = None
 

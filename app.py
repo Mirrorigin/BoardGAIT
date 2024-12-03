@@ -104,34 +104,50 @@ def vote():
         game_state["votes"][ai_vote] += 1  # Updated AI voting results
         ai_votes[ai_player] = ai_vote  # Store AI voting records
 
+    # Call eliminate logic
+    elimination_result = eliminate()
+
+    # Return the voting log and elimination results
     return jsonify({
         "message": f"{voter} voted for {target}. AI players also voted.",
         "votes": game_state["votes"],
         "ai_votes": ai_votes,
-        "descriptions": descriptions
+        "elimination_result": elimination_result.json
     })
 
 @app.route('/eliminate', methods=['POST'])
 def eliminate():
     # Find the player with the most votes
-    max_votes = max(game_state["votes"].values())
-    eliminated = [player for player, votes in game_state["votes"].items() if votes == max_votes]
-    eliminated_player = eliminated[0]
+    max_votes = max(game_state["votes"].values(), default=0)
+    candidates = [player for player, votes in game_state["votes"].items() if votes == max_votes]
+
+    # Check for a tie
+    if len(candidates) > 1:
+        return jsonify({
+            "message": "It's a tie! Additional statements are required from tied players.",
+            "tie": True,
+            "tied_players": candidates
+        })
+
+    eliminated_player = candidates[0]
     game_state["eliminated"].append(eliminated_player)
 
     # Check game-ending conditions
+    # 目前只适用只有 1 个 undercover 的情况！
+    remaining_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
     if game_state["roles"][game_state["players"].index(eliminated_player)] == "undercover":
         game_state["game_over"] = True
         game_state["winner"] = "Civilians"
-    elif len(game_state["players"]) - len(game_state["eliminated"]) <= 1:
+    elif len(remaining_players) <= 1:
         game_state["game_over"] = True
         game_state["winner"] = "Undercover"
 
     return jsonify({
-        "message": f"{eliminated_player} was eliminated.",
+        "message": f"{eliminated_player} has been eliminated.",
         "eliminated": eliminated_player,
         "game_over": game_state["game_over"],
-        "winner": game_state["winner"]
+        "winner": game_state["winner"],
+        "remaining_players": remaining_players
     })
 
 @app.route('/next_turn', methods=['POST'])
@@ -152,8 +168,11 @@ def next_turn():
             "winner": game_state["winner"]
         })
 
+    print("Current game state:", game_state)
+
     return jsonify({
         "message": "Next turn started.",
+        "current_turn": game_state["current_turn"],
         "active_players": active_players,
         "descriptions": game_state["descriptions"],
         "votes": game_state["votes"]

@@ -194,14 +194,17 @@
                 alert("Please select your vote target.");
                 return;
             }
+
             const response = await fetch('/vote', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ voter: playerName, target: target })
             });
+
             const data = await response.json();
             if (response.ok) {
                 logMessage(`Vote submitted: ${playerName} -> ${target}`);
+
                 logMessage("AI Votes:");
                 for (const [ai, vote] of Object.entries(data.ai_votes)) {
                     logMessage(`${ai} voted for ${vote}`);
@@ -212,8 +215,15 @@
                     logMessage(`${player}: ${count} votes`);
                 }
 
-                logMessage("Collected Descriptions:");
-                logMessage(JSON.stringify(data.descriptions, null, 2));
+                // Show elimination results
+                if (data.elimination_result.tie) {
+                    logMessage("It's a tie! Tied players: " + data.elimination_result.tied_players.join(", "));
+                } else {
+                    logMessage(data.elimination_result.message);
+                    if (data.elimination_result.game_over) {
+                        logMessage("Game Over! Winner: " + data.elimination_result.winner);
+                    }
+                }
             } else {
                 alert(data.error);
             }
