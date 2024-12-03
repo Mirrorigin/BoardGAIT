@@ -1,7 +1,7 @@
 # Routing and service startup
 
 from flask import Flask, jsonify, request, render_template
-from game.state import game_state, initialize_game
+from game.state import game_state, initialize_game, reset_game_state
 from game.logic import handle_describe, handle_vote, handle_eliminate
 
 app = Flask(__name__)
@@ -112,6 +112,12 @@ def eliminate():
         "game_over": game_state["game_over"],
         "winner": game_state["winner"]
     })
+
+@app.route('/exit_game', methods=['POST'])
+def exit_game():
+    reset_game_state()
+    # print("Game state after reset:", game_state)
+    return jsonify({"message": "Game state cleared. You can start a new game."})
 
 if __name__ == '__main__':
     app.run(debug=True)

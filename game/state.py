@@ -62,3 +62,18 @@ def initialize_game():
     game_state["current_turn"] = 0
     game_state["game_over"] = False
     game_state["winner"] = None
+
+def reset_game_state():
+    global game_state
+    # print("Before reset in function:", game_state)
+    game_state.clear()
+    game_state.update({
+        "players": [],
+        "roles": [],
+        "words": {"civilian": None, "undercover": None},
+        "descriptions": {},
+        "votes": {},
+        "eliminated": [],
+        "game_over": False,
+        "winner": None
+    })

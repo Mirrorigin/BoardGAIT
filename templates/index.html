@@ -79,6 +79,10 @@
         <h3>Game Log</h3>
     </div>
 
+    <!-- Exit Game -->
+    <h2>Exit Game</h2>
+    <button onclick="exitGame()">Exit Game</button>
+
 
     <script>
         let playerName;
@@ -196,6 +200,21 @@
             logEntry.textContent = message;
             log.appendChild(logEntry);
         }
+
+        async function exitGame() {
+            const response = await fetch('/exit_game', {
+                method: 'POST',
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert(data.message); // 提示游戏状态已清空
+                logMessage(data.message); // 添加到日志中
+            } else {
+                alert("Failed to clear game state.");
+            }
+        }
+
     </script>
 </body>
 </html>
