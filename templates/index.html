@@ -44,42 +44,152 @@
 </head>
 <body>
     <h1>Who is the Undercover</h1>
-    <div>
-        <button onclick="startGame()">Start Game</button>
-    </div>
 
+    <!-- Player Join -->
+    <h2>Join the Game</h2>
+    <input type="text" id="player-name" placeholder="Enter your name">
+    <button onclick="joinGame()">Join Game</button>
+
+    <!-- Game Start -->
+    <h2>Game Actions</h2>
+    <button onclick="startGame()">Start Game</button>
+
+    <!-- Show Identity -->
     <h2>Your Identity</h2>
     <div id="identity">
-        <!-- Identity information will appear here -->
+        <!-- Identity will appear here -->
     </div>
 
+    <!-- Description Phase -->
+    <h2>Describe Your Word</h2>
+    <input type="text" id="player-description" placeholder="Your description">
+    <button onclick="submitDescription()">Submit Description</button>
+
+    <!-- Voting Phase -->
+    <h2>Vote</h2>
+    <input type="text" id="vote-target" placeholder="Vote target">
+    <button onclick="submitVote()">Submit Vote</button>
+
+    <!-- Descriptions Display -->
+    <h2>All Descriptions</h2>
+    <div id="descriptions"></div>
+
+    <!-- Game Log -->
     <div id="game-log">
         <h3>Game Log</h3>
     </div>
 
-    <script>
-        let playerName = prompt("Enter your name:"); // Prompt to input player name
 
-        async function startGame() {
-            const players = ["Alice", "Bob", "Charlie", "David"]; // Example player names
-            const response = await fetch('/start_game', {
+    <script>
+        let playerName;
+
+        // Player joins the game
+        async function joinGame() {
+            playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) {
+                alert("Please enter your name.");
+                return;
+            }
+            const response = await fetch('/join_game', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ players: players })
+                body: JSON.stringify({ player: playerName })
             });
             const data = await response.json();
-            if (data.player_info && data.player_info[playerName]) {
-                const playerIdentity = data.player_info[playerName];
-                document.getElementById("identity").innerHTML = `
-                    <p><strong>Role:</strong> ${playerIdentity.role}</p>
-                    <p><strong>Word:</strong> ${playerIdentity.word}</p>
-                `;
-                logMessage("Game started! Your role and word are shown above.");
+            if (response.ok) {
+                logMessage(data.message);
             } else {
-                logMessage("Game started, but you are not a player.");
+                alert(data.error);
             }
         }
 
+        // Start the game
+        async function startGame() {
+            const response = await fetch('/start_game', { method: 'POST' });
+            const data = await response.json();
+            if (response.ok) {
+                logMessage(data.message);
+                fetchIdentity();
+            } else {
+                alert(data.error);
+            }
+        }
+
+        // Fetch player's identity
+        async function fetchIdentity() {
+            const response = await fetch('/get_identity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ player: playerName })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById("identity").innerHTML = `
+                    <p><strong>Role:</strong> ${data.role}</p>
+                    <p><strong>Word:</strong> ${data.word}</p>
+                `;
+                logMessage("Your identity has been revealed.");
+            } else {
+                alert(data.error);
+            }
+        }
+
+        // Submit description
+        async function submitDescription() {
+            const description = document.getElementById('player-description').value.trim();
+            if (!description) {
+                alert("Please enter a description.");
+                return;
+            }
+            console.log("Submitting description:", playerName, description);
+            const response = await fetch('/describe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ player: playerName, description: description })
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                if (data.descriptions) {
+                    updateDescriptions(data.descriptions);
+                } else {
+                    console.log(data.message);
+                }
+            } else {
+                alert(data.error);
+            }
+        }
+
+        function updateDescriptions(descriptions) {
+            const descriptionDiv = document.getElementById('descriptions'); // 修改选择器为显示区域
+            descriptionDiv.innerHTML = ''; // 清空旧描述
+
+            for (const [player, desc] of Object.entries(descriptions)) {
+                const descElement = document.createElement('p');
+                descElement.textContent = `${player}: ${desc}`;
+                descriptionDiv.appendChild(descElement);
+            }
+            console.log("Descriptions updated:", descriptions); // 确认函数被调用
+}
+
+
+        // Submit vote
+        async function submitVote() {
+            const target = document.getElementById('vote-target').value.trim();
+            if (!target) {
+                alert("Please enter your vote target.");
+                return;
+            }
+            const response = await fetch('/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ voter: playerName, target: target })
+            });
+            const data = await response.json();
+            logMessage(data.message);
+        }
+
+        // Log messages
         function logMessage(message) {
             const log = document.getElementById('game-log');
             const logEntry = document.createElement('p');

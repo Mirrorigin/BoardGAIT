@@ -7,7 +7,7 @@ NUM_PLAYERS = 4  # Default: 4 players
 NUM_UNDERCOVER = 1  # Default: 1 undercover
 NUM_CIVILIANS = NUM_PLAYERS - NUM_UNDERCOVER  # Automatically calculated
 
-# Global game state
+# Initialized global game state
 game_state = {
     "players": [],
     "roles": [],
@@ -28,17 +28,26 @@ word_library = [
     ("table", "chair")
 ]
 
-def initialize_game(player_names):
-    global NUM_PLAYERS, NUM_CIVILIANS, NUM_UNDERCOVER
+# Agent names (can be replaced by AI later)
+agent_pool = [
+    "Agent Alpha",
+    "Agent Bravo",
+    "Agent Charlie",
+    "Agent Delta"
+]
 
-    NUM_PLAYERS = len(player_names)
-    if NUM_PLAYERS < 4:
+
+def initialize_game():
+
+    # Assign names
+    # Assign AI Agent names
+    agent_names = random.sample(agent_pool, NUM_PLAYERS - 1)
+    game_state["players"].extend(agent_names)
+
+    if len(game_state["players"]) < 4:
         raise ValueError("The game requires at least 4 players.")
-    NUM_UNDERCOVER = 1
-    NUM_CIVILIANS = NUM_PLAYERS - NUM_UNDERCOVER
 
     # Assign roles
-    game_state["players"] = player_names
     game_state["roles"] = ["civilian"] * NUM_CIVILIANS + ["undercover"] * NUM_UNDERCOVER
     random.shuffle(game_state["roles"])
 
