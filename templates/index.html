@@ -66,13 +66,18 @@
     <button onclick="submitDescription()">Submit Description</button>
 
     <!-- Voting Phase -->
-    <h2>Vote</h2>
-    <input type="text" id="vote-target" placeholder="Vote target">
+    <h2>Vote for a Player</h2>
+    <select id="vote-target">
+    <!-- Options are dynamically filled during initialization -->
+    </select>
     <button onclick="submitVote()">Submit Vote</button>
 
     <!-- Descriptions Display -->
     <h2>All Descriptions</h2>
     <div id="descriptions"></div>
+
+    <h2>Next Turn</h2>
+    <button onclick="nextTurn()">Next Turn</button>
 
     <!-- Game Log -->
     <div id="game-log">
@@ -113,6 +118,11 @@
             const data = await response.json();
             if (response.ok) {
                 logMessage(data.message);
+
+                // Initializes the voting target
+                const players = Object.keys(data.player_info); // Get the player list
+                initializeVoteTargets(players);
+
                 fetchIdentity();
             } else {
                 alert(data.error);
@@ -165,23 +175,23 @@
         }
 
         function updateDescriptions(descriptions) {
-            const descriptionDiv = document.getElementById('descriptions'); // 修改选择器为显示区域
-            descriptionDiv.innerHTML = ''; // 清空旧描述
+            const descriptionDiv = document.getElementById('descriptions');
+            descriptionDiv.innerHTML = ''; // Clear previous descriptions
 
             for (const [player, desc] of Object.entries(descriptions)) {
                 const descElement = document.createElement('p');
                 descElement.textContent = `${player}: ${desc}`;
                 descriptionDiv.appendChild(descElement);
             }
-            console.log("Descriptions updated:", descriptions); // 确认函数被调用
-}
+            console.log("Descriptions updated:", descriptions);
+        }
 
 
         // Submit vote
         async function submitVote() {
             const target = document.getElementById('vote-target').value.trim();
             if (!target) {
-                alert("Please enter your vote target.");
+                alert("Please select your vote target.");
                 return;
             }
             const response = await fetch('/vote', {
@@ -190,8 +200,48 @@
                 body: JSON.stringify({ voter: playerName, target: target })
             });
             const data = await response.json();
-            logMessage(data.message);
+            if (response.ok) {
+                logMessage(`Vote submitted: ${playerName} -> ${target}`);
+                logMessage("AI Votes:");
+                for (const [ai, vote] of Object.entries(data.ai_votes)) {
+                    logMessage(`${ai} voted for ${vote}`);
+                }
+
+                logMessage("Updated Votes:");
+                for (const [player, count] of Object.entries(data.votes)) {
+                    logMessage(`${player}: ${count} votes`);
+                }
+
+                logMessage("Collected Descriptions:");
+                logMessage(JSON.stringify(data.descriptions, null, 2));
+            } else {
+                alert(data.error);
+            }
         }
+
+        async function nextTurn() {
+        const response = await fetch('/next_turn', { method: 'POST' });
+        const data = await response.json();
+
+        if (response.ok) {
+            logMessage(data.message);
+
+            if (data.game_over) {
+                logMessage("Game Over! Winner: " + data.winner);
+                return;
+            }
+
+            // Update the voting goal and description
+            const players = data.active_players;
+            initializeVoteTargets(players);
+
+            logMessage(`Current Turn: ${data.current_turn}`);
+            logMessage("Descriptions cleared for the next round.");
+        } else {
+            alert("Failed to start next turn.");
+    }
+}
+
 
         // Log messages
         function logMessage(message) {
@@ -201,6 +251,19 @@
             log.appendChild(logEntry);
         }
 
+        function initializeVoteTargets(players) {
+        const voteSelect = document.getElementById('vote-target');
+        voteSelect.innerHTML = '';
+
+        players.forEach(player => {
+            const option = document.createElement('option');
+            option.value = player;
+            option.textContent = player;
+            voteSelect.appendChild(option);
+        });
+}
+
+
         async function exitGame() {
             const response = await fetch('/exit_game', {
                 method: 'POST',
@@ -208,8 +271,8 @@
 
             const data = await response.json();
             if (response.ok) {
-                alert(data.message); // 提示游戏状态已清空
-                logMessage(data.message); // 添加到日志中
+                alert(data.message); // Alert that game state is cleared
+                logMessage(data.message); // Add logs
             } else {
                 alert("Failed to clear game state.");
             }

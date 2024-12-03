@@ -1,4 +1,5 @@
 # Processing logic for easy extension
+# 后续把路由中涉及到的逻辑移到这里，防止在路由写太多逻辑
 
 from flask import jsonify
 from game.state import game_state

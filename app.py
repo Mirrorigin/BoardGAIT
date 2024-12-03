@@ -1,8 +1,9 @@
 # Routing and service startup
 
+import random
 from flask import Flask, jsonify, request, render_template
 from game.state import game_state, initialize_game, reset_game_state
-from game.logic import handle_describe, handle_vote, handle_eliminate
+# from game.logic import handle_describe, handle_vote, handle_eliminate
 
 app = Flask(__name__)
 
@@ -83,12 +84,32 @@ def describe():
 @app.route('/vote', methods=['POST'])
 def vote():
     data = request.json
-    voter = data.get("voter")
+    voter = data.get("voter")   #
     target = data.get("target")
+
+    # Player Vote
     if target in game_state["votes"]:
         game_state["votes"][target] += 1
-        return jsonify({"message": f"{voter} voted for {target}.", "votes": game_state["votes"]})
-    return jsonify({"error": "Invalid vote target."})
+    else:
+        return jsonify({"error": "Invalid vote target."})
+
+    # Automatically collect descriptions and trigger AI voting
+    active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
+    descriptions = game_state["descriptions"]
+    ai_votes = {}  # Store the voting results of each AI player
+
+    # 投票还有个逻辑就是很显然大家不会投给自己！
+    for ai_player in [p for p in active_players if p.startswith("Agent")]:
+        ai_vote = random.choice(active_players)  # AI randomly votes targets
+        game_state["votes"][ai_vote] += 1  # Updated AI voting results
+        ai_votes[ai_player] = ai_vote  # Store AI voting records
+
+    return jsonify({
+        "message": f"{voter} voted for {target}. AI players also voted.",
+        "votes": game_state["votes"],
+        "ai_votes": ai_votes,
+        "descriptions": descriptions
+    })
 
 @app.route('/eliminate', methods=['POST'])
 def eliminate():
@@ -111,6 +132,31 @@ def eliminate():
         "eliminated": eliminated_player,
         "game_over": game_state["game_over"],
         "winner": game_state["winner"]
+    })
+
+@app.route('/next_turn', methods=['POST'])
+def next_turn():
+    # Increments the current turn
+    game_state["current_turn"] += 1
+
+    # Clear the data of previous round
+    game_state["descriptions"] = {player: None for player in game_state["players"] if player not in game_state["eliminated"]}
+    game_state["votes"] = {player: 0 for player in game_state["players"] if player not in game_state["eliminated"]}
+
+    # Check if there is only 1 player or the game is over
+    active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
+    if len(active_players) <= 1 or game_state["game_over"]:
+        return jsonify({
+            "message": "Game over. No further turns.",
+            "game_over": True,
+            "winner": game_state["winner"]
+        })
+
+    return jsonify({
+        "message": "Next turn started.",
+        "active_players": active_players,
+        "descriptions": game_state["descriptions"],
+        "votes": game_state["votes"]
     })
 
 @app.route('/exit_game', methods=['POST'])

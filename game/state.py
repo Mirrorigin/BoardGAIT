@@ -15,7 +15,7 @@ game_state = {
     "descriptions": {},
     "votes": {},
     "eliminated": [],
-    "current_turn": 0,
+    "current_turn": 1,
     "game_over": False,
     "winner": None
 }
@@ -74,6 +74,7 @@ def reset_game_state():
         "descriptions": {},
         "votes": {},
         "eliminated": [],
+        "current_turn": 1,
         "game_over": False,
         "winner": None
     })
