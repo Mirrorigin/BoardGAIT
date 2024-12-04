@@ -64,18 +64,17 @@ def describe():
 
     if player in game_state["descriptions"]:
         game_state["descriptions"][player] = description
-        # game_state["current_turn"] += 1
 
     # Generate descriptions for AI agents
-    for ai_player in [p for p in game_state["players"] if p.startswith("Agent")]:
+    active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
+    for ai_player in [p for p in active_players if p.startswith("Agent")]:
         if game_state["descriptions"][ai_player] is None:
             game_state["descriptions"][ai_player] = "This will be replace by Generative AI "
 
     # Check if all players have described
     if None in game_state["descriptions"].values():
         return jsonify({"message": f"{player} provided their description."})
-    # game_state["current_turn"] = 0  # Reset turn for voting
-    print("111")
+
     return jsonify({
         "message": "All players have described their word.",
         "descriptions": game_state["descriptions"]
@@ -96,13 +95,12 @@ def vote():
     # Automatically collect descriptions and trigger AI voting
     active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
     descriptions = game_state["descriptions"]
-    ai_votes = {}  # Store the voting results of each AI player
 
-    # 投票还有个逻辑就是很显然大家不会投给自己！
+    ai_votes = {}  # Store the voting results of each AI player
     for ai_player in [p for p in active_players if p.startswith("Agent")]:
-        ai_vote = random.choice(active_players)  # AI randomly votes targets
-        game_state["votes"][ai_vote] += 1  # Updated AI voting results
-        ai_votes[ai_player] = ai_vote  # Store AI voting records
+        ai_vote = random.choice([p for p in active_players if p != ai_player])  # AI不投票给淘汰玩家，同时也不投票给自己
+        game_state["votes"][ai_vote] += 1
+        ai_votes[ai_player] = ai_vote
 
     # Call eliminate logic
     elimination_result = eliminate()
@@ -156,11 +154,12 @@ def next_turn():
     game_state["current_turn"] += 1
 
     # Clear the data of previous round
-    game_state["descriptions"] = {player: None for player in game_state["players"] if player not in game_state["eliminated"]}
-    game_state["votes"] = {player: 0 for player in game_state["players"] if player not in game_state["eliminated"]}
+    # 注意这里仅清空了 active_players 的数据
+    active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
+    game_state["descriptions"] = {player: None for player in active_players}
+    game_state["votes"] = {player: 0 for player in active_players}
 
     # Check if there is only 1 player or the game is over
-    active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
     if len(active_players) <= 1 or game_state["game_over"]:
         return jsonify({
             "message": "Game over. No further turns.",
