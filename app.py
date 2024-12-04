@@ -66,8 +66,8 @@ def describe():
         game_state["descriptions"][player] = description
 
     # Generate descriptions for AI agents
-    active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
-    for ai_player in [p for p in active_players if p.startswith("Agent")]:
+    # active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
+    for ai_player in [p for p in game_state["active_players"] if p.startswith("Agent")]:
         if game_state["descriptions"][ai_player] is None:
             game_state["descriptions"][ai_player] = "This will be replace by Generative AI "
 
@@ -93,12 +93,12 @@ def vote():
         return jsonify({"error": "Invalid vote target."})
 
     # Automatically collect descriptions and trigger AI voting
-    active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
+    # active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
     descriptions = game_state["descriptions"]
 
     ai_votes = {}  # Store the voting results of each AI player
-    for ai_player in [p for p in active_players if p.startswith("Agent")]:
-        ai_vote = random.choice([p for p in active_players if p != ai_player])  # AI不投票给淘汰玩家，同时也不投票给自己
+    for ai_player in [p for p in game_state["active_players"] if p.startswith("Agent")]:
+        ai_vote = random.choice([p for p in game_state["active_players"] if p != ai_player])  # AI不投票给淘汰玩家，同时也不投票给自己
         game_state["votes"][ai_vote] += 1
         ai_votes[ai_player] = ai_vote
 
@@ -129,14 +129,18 @@ def eliminate():
 
     eliminated_player = candidates[0]
     game_state["eliminated"].append(eliminated_player)
+    game_state["active_players"].remove(eliminated_player)
 
     # Check game-ending conditions
     # 目前只适用只有 1 个 undercover 的情况！
-    remaining_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
+    remaining_roles = [game_state["roles"][game_state["players"].index(player)] for player in game_state["active_players"]]
+
+    # 如果被淘汰的玩家是卧底：
     if game_state["roles"][game_state["players"].index(eliminated_player)] == "undercover":
         game_state["game_over"] = True
         game_state["winner"] = "Civilians"
-    elif len(remaining_players) <= 1:
+    # 如果仅剩卧底与平民存活：
+    elif remaining_roles.count("undercover") == 1 and remaining_roles.count("civilian") == 1:
         game_state["game_over"] = True
         game_state["winner"] = "Undercover"
 
@@ -145,7 +149,7 @@ def eliminate():
         "eliminated": eliminated_player,
         "game_over": game_state["game_over"],
         "winner": game_state["winner"],
-        "remaining_players": remaining_players
+        "active_players": game_state["active_players"]
     })
 
 @app.route('/next_turn', methods=['POST'])
@@ -155,12 +159,12 @@ def next_turn():
 
     # Clear the data of previous round
     # 注意这里仅清空了 active_players 的数据
-    active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
-    game_state["descriptions"] = {player: None for player in active_players}
-    game_state["votes"] = {player: 0 for player in active_players}
+    # active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
+    game_state["descriptions"] = {player: None for player in game_state["active_players"]}
+    game_state["votes"] = {player: 0 for player in game_state["active_players"]}
 
     # Check if there is only 1 player or the game is over
-    if len(active_players) <= 1 or game_state["game_over"]:
+    if len(game_state["active_players"]) <= 1 or game_state["game_over"]:
         return jsonify({
             "message": "Game over. No further turns.",
             "game_over": True,
@@ -172,7 +176,7 @@ def next_turn():
     return jsonify({
         "message": "Next turn started.",
         "current_turn": game_state["current_turn"],
-        "active_players": active_players,
+        "active_players": game_state["active_players"],
         "descriptions": game_state["descriptions"],
         "votes": game_state["votes"]
     })
