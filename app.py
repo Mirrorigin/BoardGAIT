@@ -3,6 +3,7 @@
 import random
 from flask import Flask, jsonify, request, render_template
 from game.state import game_state, initialize_game, reset_game_state
+from utils.ai_api import initialize_ai_agent
 # from game.logic import handle_describe, handle_vote, handle_eliminate
 
 app = Flask(__name__)
@@ -15,9 +16,15 @@ def home():
 def join_game():
     data = request.json
     player_name = data.get("player")
+
+    if player_name.startswith("Agent"):
+        return jsonify({"error": "Player names cannot start with 'Agent'."}), 400
+
     if player_name in game_state["players"]:
         return jsonify({"error": "Player already exists."}), 400
+
     game_state["players"].append(player_name)
+
     return jsonify({"message": f"{player_name} joined the game.", "players": game_state["players"]})
 
 @app.route('/start_game', methods=['POST'])
@@ -25,12 +32,16 @@ def start_game():
     try:
         initialize_game()
 
-        # Generate identity and word information for each player
+        # Generate identity and word for each player
         player_info = {}
         for i, player_name in enumerate(game_state["players"]):
             role = game_state["roles"][i]
             word = game_state["words"][role]
             player_info[player_name] = {"role": role, "word": word}
+
+            # For AI Agents, initialize and pass the word
+            if player_name.startswith("Agent"):
+                initialize_ai_agent(player_name, game_state["players"], word)
 
         # Returns message for all players
         return jsonify({

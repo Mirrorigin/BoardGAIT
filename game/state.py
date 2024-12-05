@@ -65,10 +65,6 @@ def initialize_game():
     game_state["game_over"] = False
     game_state["winner"] = None
 
-def get_active_players():
-    # Returns the list of players who have not been eliminated.
-    return [player for player in game_state["players"] if player not in game_state["eliminated"]]
-
 def reset_game_state():
     global game_state
     # print("Before reset in function:", game_state)
