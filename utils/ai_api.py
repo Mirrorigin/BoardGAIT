@@ -27,14 +27,16 @@ def call_openai_api(task, payload):
     # Generate user messages based on different tasks
     if task == "initialize":
         user_message = f"""
-            You are {payload['agent_name']}, an AI participant in the game 'Who is the Undercover'.
+            Your code name in this game is {payload['agent_name']}.
             Your secret word is: {payload['word']}.
             Other players in the game are: {', '.join(payload['players'])}.
+            Please wait for the instructions of the next step.
             """
     elif task == "describe":
         user_message = f"""
-                Based on the current context, generate a creative description for your word:
-                Context: {payload['context']}
+                It's your turn for describing, {payload['agent_name']}.
+                Based on the other players' descriptions, generate a creative description for your word {payload['word']}:
+                Current descriptions: {payload['context']}
                 """
     elif task == "vote":
         user_message = f"""
@@ -51,7 +53,7 @@ def call_openai_api(task, payload):
                 {"role": "system", "content": SYSTEM_MESSAGE},
                 {"role": "user", "content": user_message}
             ],
-            max_tokens=100
+            max_tokens=1000
         )
         return response["choices"][0]["message"]["content"].strip()
     except openai.error.OpenAIError as e:
@@ -65,3 +67,29 @@ def initialize_ai_agent(agent_name, players, word):
         "word": word
     }
     call_openai_api("initialize", payload)
+
+def generate_ai_descriptions(game_state):
+    """
+    Generate descriptions for all AI players who have not yet generated descriptions, and update the game status.
+    :param game_state: Current game state
+    :return: Updated descriptions
+    """
+
+    # Generate descriptions for active AI agents
+    for ai_player in [p for p in game_state["active_players"] if
+                      p.startswith("Agent") and game_state["descriptions"][p] is None]:
+        player_index = game_state["players"].index(ai_player)
+        role = game_state["roles"][player_index]
+        word = game_state["words"][role]
+
+        payload = {
+            "agent_name": ai_player,
+            "word": word,
+            "context": game_state['descriptions']
+        }
+        ai_description = call_openai_api("describe", payload)
+
+        # Update game state
+        game_state["descriptions"][ai_player] = ai_description
+
+    return game_state["descriptions"]

@@ -3,7 +3,7 @@
 import random
 from flask import Flask, jsonify, request, render_template
 from game.state import game_state, initialize_game, reset_game_state
-from utils.ai_api import initialize_ai_agent
+from utils.ai_api import initialize_ai_agent, generate_ai_descriptions
 # from game.logic import handle_describe, handle_vote, handle_eliminate
 
 app = Flask(__name__)
@@ -55,11 +55,14 @@ def start_game():
 def get_identity():
     data = request.json
     player_name = data.get("player")
+
     if player_name not in game_state["players"]:
         return jsonify({"error": "Player not found."}), 404
+
     player_index = game_state["players"].index(player_name)
     role = game_state["roles"][player_index]
     word = game_state["words"][role]
+
     return jsonify({
         "player": player_name,
         "role": role,
@@ -71,16 +74,12 @@ def get_identity():
 def describe():
     data = request.json
     player = data.get("player")
-    description = data.get("description")
+    player_description = data.get("description")
 
     if player in game_state["descriptions"]:
-        game_state["descriptions"][player] = description
+        game_state["descriptions"][player] = player_description
 
-    # Generate descriptions for AI agents
-    # active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
-    for ai_player in [p for p in game_state["active_players"] if p.startswith("Agent")]:
-        if game_state["descriptions"][ai_player] is None:
-            game_state["descriptions"][ai_player] = "This will be replace by Generative AI "
+    generate_ai_descriptions(game_state)
 
     # Check if all players have described
     if None in game_state["descriptions"].values():
