@@ -40,8 +40,12 @@ def call_openai_api(task, payload):
                 """
     elif task == "vote":
         user_message = f"""
-                Analyze the descriptions and vote for the most suspicious player from the following options:
-                {', '.join(payload['options'])}
+                It's your turn for voting, {payload['agent_name']}.
+                Here are the descriptions from all players:
+                {', '.join([f'{k}: {v}' for k, v in payload['descriptions'].items()])}.
+                Based on these descriptions, vote for the most suspicious player from the following options:
+                {', '.join(payload['options'])}.
+                Return their name only.
                 """
     else:
         raise ValueError(f"Invalid task: {task}")
@@ -93,3 +97,26 @@ def generate_ai_descriptions(game_state):
         game_state["descriptions"][ai_player] = ai_description
 
     return game_state["descriptions"]
+
+def generate_ai_votes(game_state):
+    """
+    Generate votes for all AI players and update the game status.
+    :param game_state: Current game state
+    :return: 更新后的投票状态
+    """
+
+    # Generate votes for active AI agents
+    for ai_player in [p for p in game_state["active_players"] if p.startswith("Agent")]:
+        payload = {
+            "agent_name": ai_player,
+            "descriptions": game_state["descriptions"],
+            "options": [p for p in game_state["active_players"] if p != ai_player]  # can't vote for yourself
+        }
+
+        ai_vote = call_openai_api("vote", payload)
+
+        # Check whether vote is valid
+        if ai_vote in game_state["votes"]:
+            game_state["votes"][ai_vote] += 1
+
+    return game_state["votes"]

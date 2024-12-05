@@ -3,7 +3,7 @@
 import random
 from flask import Flask, jsonify, request, render_template
 from game.state import game_state, initialize_game, reset_game_state
-from utils.ai_api import initialize_ai_agent, generate_ai_descriptions
+from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
 # from game.logic import handle_describe, handle_vote, handle_eliminate
 
 app = Flask(__name__)
@@ -102,15 +102,15 @@ def vote():
     else:
         return jsonify({"error": "Invalid vote target."})
 
-    # Automatically collect descriptions and trigger AI voting
-    # active_players = [player for player in game_state["players"] if player not in game_state["eliminated"]]
-    descriptions = game_state["descriptions"]
+    generate_ai_votes(game_state)
 
-    ai_votes = {}  # Store the voting results of each AI player
-    for ai_player in [p for p in game_state["active_players"] if p.startswith("Agent")]:
-        ai_vote = random.choice([p for p in game_state["active_players"] if p != ai_player])  # AI不投票给淘汰玩家，同时也不投票给自己
-        game_state["votes"][ai_vote] += 1
-        ai_votes[ai_player] = ai_vote
+    # Check to see if voting is complete
+    total_votes = sum(game_state["votes"].values())
+    if total_votes == len(game_state["active_players"]):
+        return jsonify({
+            "message": "Voting completed.",
+            "votes": game_state["votes"]
+        })
 
     # Call eliminate logic
     elimination_result = eliminate()
