@@ -9,10 +9,15 @@ SYSTEM_MESSAGE = """
 
         Game rules:
         1. Each player receives a secret word. Most players share the same word, but the 'Undercover' has a slightly different word.
-        2. In each round, every player describes their word in one sentence, the secret word must not be mentioned.
-        3. Repeated descriptions might raise doubts.
-        4. After everyone describes, players vote to eliminate the most suspicious person.
+        2. In each round, every player describes their word in one sentence. The secret word must not be mentioned directly.
+        3. You are not allowed to lie or pretend your word is the same as the others.
+        4. After everyone describes their word, all players vote to eliminate the person they suspect has a different word (the Undercover).
         5. The game ends when the Undercover is eliminated, or only one Civilian and the Undercover remain.
+        
+        Guidelines for optimal play:
+        - During the description phase, overly specific descriptions might expose your word, while overly vague or repetitive descriptions might also raise doubts.
+        - If your word differs from others', focus on subtle similarities to blend in without fabricating or misrepresenting your word.
+        - During the voting phase, assess other players' descriptions carefully. Look for inconsistencies, overly specific details, or vague statements to identify who might have a different word.
 
         Main task includes: initialize, describe and vote. Please wait for instructions to act.
         """
@@ -27,7 +32,7 @@ def call_openai_api(task, payload):
     # Generate user messages based on different tasks
     if task == "initialize":
         user_message = f"""
-            Game Start! Your code name in this game is {payload['agent_name']}.
+            Game Start and Initialized! Your code name in this game is {payload['agent_name']}.
             Your secret word is: {payload['word']}.
             Other players in the game are: {', '.join(payload['players'])}.
             Please wait for instructions to describe your word.
