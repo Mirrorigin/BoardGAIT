@@ -107,21 +107,16 @@ def vote():
     # Check to see if voting is complete
     total_votes = sum(game_state["votes"].values())
     if total_votes == len(game_state["active_players"]):
+        # Call eliminate logic
+        elimination_result = eliminate()
+
+        # Return the voting log and elimination results
         return jsonify({
-            "message": "Voting completed.",
-            "votes": game_state["votes"]
+            "message": f"{voter} voted for {target}. AI players also voted.",
+            "votes": game_state["votes"],
+            "ai_votes": game_state["votes"],
+            "elimination_result": elimination_result.json
         })
-
-    # Call eliminate logic
-    elimination_result = eliminate()
-
-    # Return the voting log and elimination results
-    return jsonify({
-        "message": f"{voter} voted for {target}. AI players also voted.",
-        "votes": game_state["votes"],
-        "ai_votes": ai_votes,
-        "elimination_result": elimination_result.json
-    })
 
 @app.route('/eliminate', methods=['POST'])
 def eliminate():

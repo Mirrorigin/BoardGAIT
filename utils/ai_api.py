@@ -1,20 +1,20 @@
-import openai
-from secret import OPENAI_API_KEY
+import os
+from openai import OpenAI, OpenAIError
+# from secret import OPENAI_API_KEY
 
-openai.api_key = OPENAI_API_KEY
+openai_client = OpenAI()
 
 SYSTEM_MESSAGE = """
         You are a player in a game called 'Who is the Undercover'.
 
         Game rules:
         1. Each player receives a secret word. Most players share the same word, but the 'Undercover' has a slightly different word.
-        2. In each round, every player describes their word in one sentence. Repeated or vague descriptions might raise doubts.
-        3. After everyone describes, players vote to eliminate the most suspicious person.
-        4. The game ends when the Undercover is eliminated, or only one Civilian and the Undercover remain.
+        2. In each round, every player describes their word in one sentence, the secret word must not be mentioned.
+        3. Repeated descriptions might raise doubts.
+        4. After everyone describes, players vote to eliminate the most suspicious person.
+        5. The game ends when the Undercover is eliminated, or only one Civilian and the Undercover remain.
 
-        Your task includes:
-        - Generate a description for your word.
-        - Vote for the most suspicious player.
+        Main task includes: initialize, describe and vote. Please wait for instructions to act.
         """
 
 def call_openai_api(task, payload):
@@ -27,10 +27,10 @@ def call_openai_api(task, payload):
     # Generate user messages based on different tasks
     if task == "initialize":
         user_message = f"""
-            Your code name in this game is {payload['agent_name']}.
+            Game Start! Your code name in this game is {payload['agent_name']}.
             Your secret word is: {payload['word']}.
             Other players in the game are: {', '.join(payload['players'])}.
-            Please wait for the instructions of the next step.
+            Please wait for instructions to describe your word.
             """
     elif task == "describe":
         user_message = f"""
@@ -51,7 +51,7 @@ def call_openai_api(task, payload):
         raise ValueError(f"Invalid task: {task}")
 
     try:
-        response = openai.ChatCompletion.create(
+        response = openai_client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": SYSTEM_MESSAGE},
@@ -59,8 +59,10 @@ def call_openai_api(task, payload):
             ],
             max_tokens=1000
         )
-        return response["choices"][0]["message"]["content"].strip()
-    except openai.error.OpenAIError as e:
+        print(response.choices[0].message.content)
+        return response.choices[0].message.content
+
+    except OpenAIError as e:
         print(f"OpenAI API Error: {e}")
         return "Fallback response"
 
@@ -102,7 +104,7 @@ def generate_ai_votes(game_state):
     """
     Generate votes for all AI players and update the game status.
     :param game_state: Current game state
-    :return: 更新后的投票状态
+    :return: Update Votes
     """
 
     # Generate votes for active AI agents
