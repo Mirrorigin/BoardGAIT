@@ -1,5 +1,6 @@
 import os
 from openai import OpenAI, OpenAIError
+from utils.text_to_speech import audio_gen
 # from secret import OPENAI_API_KEY
 
 openai_client = OpenAI()
@@ -99,6 +100,9 @@ def generate_ai_descriptions(game_state):
             "context": game_state['descriptions']
         }
         ai_description = call_openai_api("describe", payload)
+
+        # Play generated audio
+        audio_gen(ai_description)
 
         # Update game state
         game_state["descriptions"][ai_player] = ai_description
