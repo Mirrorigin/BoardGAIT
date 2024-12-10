@@ -1,0 +1,115 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, #062F4F, #B82601);
+}
+.section {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.game-title {
+    font-size: 48px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    transform: translateX(-20px);
+    background: linear-gradient(90deg, rgba(196, 99, 78, 0.97), rgba(216, 20, 72, 0.81));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+}
+
+.game-title-subline {
+    width: 120px;
+    height: 6px;
+    background: linear-gradient(90deg, rgba(196, 99, 78, 0.97), rgba(216, 20, 72, 0.81));
+    transform: translateX(-20px);
+    margin: 10px auto;
+    border-radius: 3px;
+}
+.input-container {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 50px 100px; /* rectangular scale */
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 1000px;
+    text-align: center;
+    box-sizing: border-box;
+}
+ h1 {
+    font-size: 30px;
+    margin-bottom: 30px;
+    color: #062F4F;
+    font-weight: bold;
+}
+input {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    margin-bottom: 30px;
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+}
+input:focus {
+    border-color: #813772;
+    box-shadow: 0 0 10px rgba(129, 55, 114, 0.5);
+}
+button {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    font-weight: bold;
+    background: linear-gradient(135deg, #813772, #B82601);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 15px rgba(90, 85, 78, 0.2);
+}
+button:hover {
+    background: linear-gradient(135deg, #B82601, #813772);
+    transform: translateY(-3px);
+    box-shadow: 0 0 15px rgba(184, 38, 1, 0.8);
+}
+button:active {
+    transform: translateY(2px);
+    box-shadow: 0 4px 10px rgba(90, 85, 78, 0.2);
+}
+.flash-message {
+    position: absolute;
+    top: 10%;
+    left: 49%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px 25px;
+    color: #B82601;
+    font-size: 16px;
+    font-weight: bold;
+    border: 1px solid #B82601;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    max-width: 90%;
+}
+.flash-message.show {
+    opacity: 1;
+    visibility: visible;
+}
+.error {
+    color: #B82601;
+    font-size: 16px;
+    margin-top: 20px;
+}

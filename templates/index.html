@@ -4,290 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Who is the Undercover</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f9f9f9;
-        }
-        h1 {
-            color: #333;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        input {
-            padding: 10px;
-            margin: 5px;
-            font-size: 16px;
-        }
-        #game-log {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            height: 300px;
-            overflow-y: scroll;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/4.0.12/fullpage.min.css">
 </head>
+
 <body>
-    <h1>Who is the Undercover</h1>
+    <div id="fullpage">
+        <!-- Slide 1: Enter Name and Join Game -->
+        <div class="section">
+            <div class="game-title">Who is the Undercover</div>
+            <div class="game-title-subline"></div>
+            <div class="input-container">
+                <h1>Enter Your name</h1>
+                <input type="text" id="player-name" placeholder="I want to play as ...">
+                <button onclick="joinGame()">Join Game</button>
+                <p id="error-message" class="error"></p>
+            </div>
+        </div>
+        <!-- Slide 2: Join Success and wait for initialization-->
+        <div class="section">
+            <h2>Success!</h2>
+            <p id="success-message">You have joined the game.</p>
+            <button onclick="moveToNextStep()">Next</button>
+        </div>
 
-    <!-- Player Join -->
-    <h2>Join the Game</h2>
-    <input type="text" id="player-name" placeholder="Enter your name">
-    <button onclick="joinGame()">Join Game</button>
+        <div id="game-actions">
+            <button id="start-game-button" onclick="startGame()" disabled>Start Game</button>
+        </div>
 
-    <!-- Game Start -->
-    <h2>Game Actions</h2>
-    <button onclick="startGame()">Start Game</button>
+        <div id="player-list-container" style="text-align: center; margin-top: 20px;">
+            <h3>Players:</h3>
+            <ul id="player-list"></ul>
+        </div>
 
-    <!-- Show Identity -->
-    <h2>Your Identity</h2>
-    <div id="identity">
-        <!-- Identity will appear here -->
+        <div id="agent-display-container" style="text-align: center; margin-top: 50px;">
+            <h2>Meet the Agents</h2>
+            <div id="agent-display" style="display: flex; justify-content: center; gap: 20px;"></div>
+        </div>
+
+
     </div>
 
-    <!-- Description Phase -->
-    <h2>Describe Your Word</h2>
-    <input type="text" id="player-description" placeholder="Your description">
-    <button onclick="submitDescription()">Submit Description</button>
+    <div id="flash-message" class="flash-message">message</div>
 
-    <!-- Voting Phase -->
-    <h2>Vote for a Player</h2>
-    <select id="vote-target">
-    <!-- Options are dynamically filled during initialization -->
-    </select>
-    <button onclick="submitVote()">Submit Vote</button>
-
-    <!-- Descriptions Display -->
-    <h2>All Descriptions</h2>
-    <div id="descriptions"></div>
-
-    <h2>Next Turn</h2>
-    <button onclick="nextTurn()">Next Turn</button>
-
-    <!-- Game Log -->
-    <div id="game-log">
-        <h3>Game Log</h3>
-    </div>
-
-    <!-- Exit Game -->
-    <h2>Exit Game</h2>
-    <button onclick="exitGame()">Exit Game</button>
-
-
-    <script>
-        let playerName;
-
-        // Player joins the game
-        async function joinGame() {
-            playerName = document.getElementById('player-name').value.trim();
-            if (!playerName) {
-                alert("Please enter your name.");
-                return;
-            }
-            const response = await fetch('/join_game', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ player: playerName })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                logMessage(data.message);
-            } else {
-                alert(data.error);
-            }
-        }
-
-        // Start the game
-        async function startGame() {
-            const response = await fetch('/start_game', { method: 'POST' });
-            const data = await response.json();
-            if (response.ok) {
-                logMessage(data.message);
-
-                // Initializes the voting target
-                const players = Object.keys(data.player_info); // Get the player list
-                initializeVoteTargets(players);
-
-                fetchIdentity();
-            } else {
-                alert(data.error);
-            }
-        }
-
-        // Fetch player's identity
-        async function fetchIdentity() {
-            const response = await fetch('/get_identity', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ player: playerName })
-            });
-            const data = await response.json();
-            if (response.ok) {
-                document.getElementById("identity").innerHTML = `
-                    <p><strong>Role:</strong> ${data.role}</p>
-                    <p><strong>Word:</strong> ${data.word}</p>
-                `;
-                logMessage("Your identity has been revealed.");
-            } else {
-                alert(data.error);
-            }
-        }
-
-        // Submit description
-        async function submitDescription() {
-            const description = document.getElementById('player-description').value.trim();
-            if (!description) {
-                alert("Please enter a description.");
-                return;
-            }
-            console.log("Submitting description:", playerName, description);
-            const response = await fetch('/describe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ player: playerName, description: description })
-            });
-            const data = await response.json();
-
-            if (response.ok) {
-                if (data.descriptions) {
-                    updateDescriptions(data.descriptions);
-                } else {
-                    console.log(data.message);
-                }
-            } else {
-                alert(data.error);
-            }
-        }
-
-        function updateDescriptions(descriptions) {
-            const descriptionDiv = document.getElementById('descriptions');
-            descriptionDiv.innerHTML = ''; // Clear previous descriptions
-
-            for (const [player, desc] of Object.entries(descriptions)) {
-                const descElement = document.createElement('p');
-                descElement.textContent = `${player}: ${desc}`;
-                descriptionDiv.appendChild(descElement);
-            }
-            console.log("Descriptions updated:", descriptions);
-        }
-
-
-        // Submit vote
-        async function submitVote() {
-            const target = document.getElementById('vote-target').value.trim();
-            if (!target) {
-                alert("Please select your vote target.");
-                return;
-            }
-
-            const response = await fetch('/vote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ voter: playerName, target: target })
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                logMessage(`Vote submitted: ${playerName} -> ${target}`);
-
-                logMessage("AI Votes:");
-                for (const [ai, vote] of Object.entries(data.ai_votes)) {
-                    logMessage(`${ai} voted for ${vote}`);
-                }
-
-                logMessage("Updated Votes:");
-                for (const [player, count] of Object.entries(data.votes)) {
-                    logMessage(`${player}: ${count} votes`);
-                }
-
-                // Show elimination results
-                if (data.elimination_result.tie) {
-                    logMessage("It's a tie! Tied players: " + data.elimination_result.tied_players.join(", "));
-                } else {
-                    logMessage(data.elimination_result.message);
-                    if (data.elimination_result.game_over) {
-                        logMessage("Game Over! Winner: " + data.elimination_result.winner);
-                    }
-                }
-            } else {
-                alert(data.error);
-            }
-        }
-
-        async function nextTurn() {
-        const response = await fetch('/next_turn', { method: 'POST' });
-        const data = await response.json();
-
-        if (response.ok) {
-            logMessage(data.message);
-
-            if (data.game_over) {
-                logMessage("Game Over! Winner: " + data.winner);
-                return;
-            }
-
-            // Update the voting goal and description
-            const players = data.active_players;
-            initializeVoteTargets(players);
-
-            logMessage(`Current Turn: ${data.current_turn}`);
-            logMessage("Descriptions cleared for the next round.");
-        } else {
-            alert("Failed to start next turn.");
-    }
-}
-
-
-        // Log messages
-        function logMessage(message) {
-            const log = document.getElementById('game-log');
-            const logEntry = document.createElement('p');
-            logEntry.textContent = message;
-            log.appendChild(logEntry);
-        }
-
-        function initializeVoteTargets(players) {
-        const voteSelect = document.getElementById('vote-target');
-        voteSelect.innerHTML = '';
-
-        players.forEach(player => {
-            const option = document.createElement('option');
-            option.value = player;
-            option.textContent = player;
-            voteSelect.appendChild(option);
-        });
-}
-
-
-        async function exitGame() {
-            const response = await fetch('/exit_game', {
-                method: 'POST',
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                alert(data.message); // Alert that game state is cleared
-                logMessage(data.message); // Add logs
-            } else {
-                alert("Failed to clear game state.");
-            }
-        }
-
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/4.0.12/fullpage.min.js"></script>
+    <script src="/static/js/script.js"></script>
 </body>
 </html>

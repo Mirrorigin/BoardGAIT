@@ -1,12 +1,23 @@
 # Routing and service startup
 
 import random
+import logging
 from flask import Flask, jsonify, request, render_template
 from game.state import game_state, initialize_game, reset_game_state
 from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
 # from game.logic import handle_describe, handle_vote, handle_eliminate
 
 app = Flask(__name__)
+
+# Configuration logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        # logging.FileHandler("game_debug.log"),    # Output to files
+        logging.StreamHandler()  # 同时输出到控制台
+    ]
+)
 
 @app.route('/')
 def home():
@@ -24,14 +35,19 @@ def join_game():
         return jsonify({"error": "Player already exists."}), 400
 
     game_state["players"].append(player_name)
+    logging.debug(f"Current Player in the game: {game_state['players']}")
 
-    return jsonify({"message": f"{player_name} joined the game.", "players": game_state["players"]})
+    initialize_game()
+    logging.debug(f"Game initializing...Current Player in the game: {game_state['players']}")
+
+    return jsonify({
+        "message": f"All players joined the game.",
+        "players": game_state["players"]}
+    )
 
 @app.route('/start_game', methods=['POST'])
 def start_game():
     try:
-        initialize_game()
-
         # Generate identity and word for each player
         player_info = {}
         for i, player_name in enumerate(game_state["players"]):

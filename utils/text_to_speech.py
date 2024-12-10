@@ -2,8 +2,8 @@ import os
 from elevenlabs import play
 from elevenlabs.client import ElevenLabs
 
-ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-client = ElevenLabs(api_key=ELEVEN_API_KEY)
+# ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+client = ElevenLabs()
 
 def audio_gen(text, voice="Brian"):
     """
