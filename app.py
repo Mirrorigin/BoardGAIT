@@ -19,6 +19,12 @@ logging.basicConfig(
     ]
 )
 
+@app.before_request
+def clear_game_state_on_refresh():
+    """Clear game_state when the page loads"""
+    logging.debug(f"Reset game_state: {game_state}")
+    reset_game_state()
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -40,9 +46,11 @@ def join_game():
     initialize_game()
     logging.debug(f"Game initializing...Current Player in the game: {game_state['players']}")
 
+    agents = [player for player in game_state["players"] if player.startswith("Agent")]
+
     return jsonify({
         "message": f"All players joined the game.",
-        "players": game_state["players"]}
+        "agents": agents}
     )
 
 @app.route('/start_game', methods=['POST'])
@@ -201,12 +209,6 @@ def next_turn():
         "descriptions": game_state["descriptions"],
         "votes": game_state["votes"]
     })
-
-@app.route('/exit_game', methods=['POST'])
-def exit_game():
-    reset_game_state()
-    # print("Game state after reset:", game_state)
-    return jsonify({"message": "Game state cleared. You can start a new game."})
 
 if __name__ == '__main__':
     app.run(debug=True)

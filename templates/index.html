@@ -21,28 +21,24 @@
                 <p id="error-message" class="error"></p>
             </div>
         </div>
+
         <!-- Slide 2: Join Success and wait for initialization-->
-        <div class="section">
-            <h2>Success!</h2>
-            <p id="success-message">You have joined the game.</p>
-            <button onclick="moveToNextStep()">Next</button>
-        </div>
-
-        <div id="game-actions">
-            <button id="start-game-button" onclick="startGame()" disabled>Start Game</button>
-        </div>
-
-        <div id="player-list-container" style="text-align: center; margin-top: 20px;">
-            <h3>Players:</h3>
-            <ul id="player-list"></ul>
-        </div>
-
-        <div id="agent-display-container" style="text-align: center; margin-top: 50px;">
-            <h2>Meet the Agents</h2>
-            <div id="agent-display" style="display: flex; justify-content: center; gap: 20px;"></div>
-        </div>
-
-
+       <div class="section">
+           <div id="loading-indicator" style="display: none; text-align: center; margin-top: 20px;">
+               <p style="font-size: 24px; font-weight: bold; color: #333;">Waiting for Agents</p>
+               <div>
+                   <span class="dot"></span>
+                   <span class="dot"></span>
+                   <span class="dot"></span>
+               </div>
+           </div>
+           <div id="agent-display-container">
+               <div id="agent-display"></div>
+           </div>
+           <div id="game-actions">
+               <button id="start-game-button" onclick="startGame()" disabled>Start Game</button>
+           </div>
+       </div>
     </div>
 
     <div id="flash-message" class="flash-message">message</div>

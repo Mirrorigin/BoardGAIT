@@ -1,6 +1,7 @@
 # Game state and initialization
 
 import random
+import time
 
 # Configurable player numbers
 NUM_PLAYERS = 4  # Default: 4 players
@@ -39,6 +40,8 @@ agent_pool = [
 
 
 def initialize_game():
+
+    time.sleep(5)   # mock
 
     # Assign names
     # Assign AI Agent names

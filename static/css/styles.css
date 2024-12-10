@@ -1,3 +1,4 @@
+/* Slide 1 */
 body {
     font-family: 'Arial', sans-serif;
     margin: 0;
@@ -64,7 +65,6 @@ input:focus {
     box-shadow: 0 0 10px rgba(129, 55, 114, 0.5);
 }
 button {
-    width: 100%;
     padding: 15px;
     font-size: 18px;
     font-weight: bold;
@@ -76,6 +76,7 @@ button {
     transition: all 0.3s ease;
     box-shadow: 0 6px 15px rgba(90, 85, 78, 0.2);
 }
+
 button:hover {
     background: linear-gradient(135deg, #B82601, #813772);
     transform: translateY(-3px);
@@ -85,24 +86,31 @@ button:active {
     transform: translateY(2px);
     box-shadow: 0 4px 10px rgba(90, 85, 78, 0.2);
 }
+
 .flash-message {
-    position: absolute;
+    position: fixed;
     top: 10%;
     left: 49%;
     transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.9);
     padding: 15px 25px;
-    color: #B82601;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
-    border: 1px solid #B82601;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     z-index: 999;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
-    max-width: 90%;
+}
+
+.flash-message.success {
+    background: rgba(3, 81, 3, 0.9);
+    color: white;
+}
+
+.flash-message.error {
+    background: rgba(184, 38, 1, 0.9);
+    color: white;
 }
 .flash-message.show {
     opacity: 1;
@@ -112,4 +120,110 @@ button:active {
     color: #B82601;
     font-size: 16px;
     margin-top: 20px;
+}
+
+/* Slide 2 */
+.section {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.dot {
+    display: inline-block;
+    width: 40px; /* Width */
+    height: 40px; /* Height */
+    margin: 0 5px;
+    background-color: #c39786;
+    border-radius: 50%;
+    animation: dot-blink 1.5s infinite ease-in-out;
+}
+
+@keyframes dot-blink {
+    0%, 20% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+}
+
+.dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.dot:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+#loading-indicator p {
+    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#agent-display-container {
+    margin-top: 50px;
+    text-align: center;
+    position: relative;
+    padding-bottom: 20px;
+}
+
+#agent-display {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#agent-display img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 3px solid #ccc;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#agent-display p {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+#start-game-button {
+    width: 200px;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+#start-game-button.enabled {
+    cursor: pointer;
+    opacity: 1;
+}
+
+#start-game-button.enabled:hover {
+    background: linear-gradient(135deg, #B82601, #813772);
+    transform: translateY(-3px);
+    box-shadow: 0 0 15px rgba(184, 38, 1, 0.8);
+}
+
+#start-game-button.enabled:active {
+    transform: translateY(2px);
+    box-shadow: 0 4px 10px rgba(90, 85, 78, 0.2);
 }
