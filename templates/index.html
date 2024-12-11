@@ -9,6 +9,11 @@
 </head>
 
 <body>
+
+    <div id="agent-display-container" style="display: none;">
+       <div id="agent-display"></div>
+    </div>
+
     <div id="fullpage">
         <!-- Slide 1: Enter Name and Join Game -->
         <div class="section">
@@ -23,25 +28,31 @@
         </div>
 
         <!-- Slide 2: Join Success and wait for initialization-->
-       <div class="section">
-           <div id="loading-indicator" style="display: none; text-align: center; margin-top: 20px;">
-               <p style="font-size: 24px; font-weight: bold; color: #333;">Waiting for Agents</p>
+        <div class="section">
+           <div id="loading-indicator">
+               <p> Waiting for Agents</p>
                <div>
                    <span class="dot"></span>
                    <span class="dot"></span>
                    <span class="dot"></span>
                </div>
            </div>
-           <div id="agent-display-container">
-               <div id="agent-display"></div>
-           </div>
+
            <div id="game-actions">
                <button id="start-game-button" onclick="startGame()" disabled>Start Game</button>
            </div>
-       </div>
+        </div>
+
+        <!-- Slide 3: Gameplay -->
+        <div class="section">
+            <h2>Game On!</h2>
+            <p>Enjoy the game.</p>
+        </div>
+
     </div>
 
     <div id="flash-message" class="flash-message">message</div>
+    <div id="tooltip" class="tooltip"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/4.0.12/fullpage.min.js"></script>
     <script src="/static/js/script.js"></script>

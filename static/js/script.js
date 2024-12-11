@@ -6,6 +6,25 @@ new fullpage('#fullpage', {
     autoScrolling: true,
     navigation: true,
     onLeave: (origin, destination, direction) => {
+
+        const agentDisplay = document.getElementById('agent-display-container');
+        const startGameButton = document.getElementById('start-game-button');
+
+        // Control agent-display visible or hidden
+        if (destination.index === 1 || destination.index === 2) {
+            agentDisplay.style.display = 'block';
+            console.log('Agent Display Container Style:', agentDisplay.style.display);
+        } else {
+            agentDisplay.style.display = 'none';
+        }
+
+        // Control  Start_Game visible or hidden
+        if (destination.index === 1) {
+            startGameButton.style.display = 'block';
+        } else {
+            startGameButton.style.display = 'none';
+        }
+
         // Prevents access to the second screen if the player name is not entered
         if (destination.index === 1 && !playerName) {
             showFlashMessage('Please enter your name before proceeding.', "error");
@@ -41,6 +60,7 @@ async function joinGame() {
     errorMessage.textContent = "";  // Clear previous error messages
     fullpage_api.moveSectionDown(); // Slide to the next page
     fullpage_api.setAllowScrolling(false, 'up');    // No scrolling up
+    fullpage_api.setAllowScrolling(false, 'down');  // No scrolling down
 
     showFlashMessage("Success! You have joined the game.", "success");
 
@@ -61,8 +81,8 @@ async function joinGame() {
         // Wait for the server to respond...
         if (response.ok) {
             console.log("Game initialized successfully!");
-            console.log("Agents:", data.agents);
-            displayAgents(data.agents);
+            console.log("Agents:", data.agent_names, data.agent_infos, data.agent_avatars);
+            displayAgents(data.agent_names, data.agent_infos, data.agent_avatars);
             startGameButton.disabled = false;   // Enable the Start_Game button
             startGameButton.classList.add('enabled');
         } else {
@@ -78,23 +98,26 @@ async function joinGame() {
     }
 }
 
-function displayAgents(agents) {
+function displayAgents(agent_names, agent_infos, agent_avatars) {
     const container = document.getElementById('agent-display');
     container.innerHTML = "";   // Empty the container
 
     let index = 0;
 
     function showEachAgent() {
-        if (index >= agents.length) return; // All agents are displayed successfully
+        if (index >= agent_names.length) return; // All agents are displayed successfully
 
-        const agentName = agents[index];
-
+        const agentName = agent_names[index];
+        const agentInfo = agent_infos[index];
+        const agentAvatar = agent_avatars[index];
+        const tooltip = document.getElementById('tooltip');
         // Create the Agent avatar and name elements
         const agentElement = document.createElement('div');
-        agentElement.style.textAlign = "center";
+
+        agentElement.setAttribute('data-info', agentInfo);
 
         const avatar = document.createElement('img');
-        avatar.src = "https://via.placeholder.com/150"; // mock
+        avatar.src = agentAvatar
         avatar.alt = agentName;
         avatar.style.width = "150px";
         avatar.style.height = "150px";
@@ -108,6 +131,26 @@ function displayAgents(agents) {
         agentElement.appendChild(avatar);
         agentElement.appendChild(name);
 
+        // Add hover event to show tooltip
+        avatar.addEventListener('mouseenter', (event) => {
+            console.log('Mouse entered the avatar!');
+            tooltip.style.visibility = 'visible';
+            tooltip.style.opacity = '1';
+            tooltip.textContent = agentInfo;
+        });
+
+        avatar.addEventListener('mousemove', (event) => {
+            const offsetY = 100;
+            const offsetX = 0;
+            tooltip.style.top = `${event.clientY - offsetY - tooltip.offsetHeight}px`;
+            tooltip.style.left = `${event.clientX + offsetX - tooltip.offsetWidth / 2}px`;
+        });
+
+        avatar.addEventListener('mouseleave', () => {
+            tooltip.style.visibility = 'hidden';
+            tooltip.style.opacity = '0';
+        });
+
         // Add containers to the display area
         container.appendChild(agentElement);
 
@@ -118,5 +161,34 @@ function displayAgents(agents) {
 }
 
 async function startGame() {
-    window.location.href = '/game';
+    try {
+        const response = await fetch('/start_game', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            console.log("Game started...");
+            console.log("Player Info:", data.player_info);
+
+            // Get current player's identity
+            const playerInfo = data.player_info[playerName];
+            if (playerInfo) {
+                document.getElementById('role-display').textContent = playerInfo.role;
+                document.getElementById('word-display').textContent = playerInfo.word;
+            } else {
+                console.error("Player information not found!");
+            }
+
+            // Move to the next section
+            fullpage_api.moveSectionDown();
+        } else {
+            console.error(data.error);
+            showFlashMessage(data.error, "error");
+        }
+    } catch (error) {
+        console.error("Error during start game:", error);
+        showFlashMessage("An error occurred. Please try again.", "error");
+    }
 }

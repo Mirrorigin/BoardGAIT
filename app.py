@@ -5,6 +5,7 @@ import logging
 from flask import Flask, jsonify, request, render_template
 from game.state import game_state, initialize_game, reset_game_state
 from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
+from utils.ai_mock import initialize_ai_agent_mock, generate_ai_mock, generate_ai_mock
 # from game.logic import handle_describe, handle_vote, handle_eliminate
 
 app = Flask(__name__)
@@ -43,14 +44,16 @@ def join_game():
     game_state["players"].append(player_name)
     logging.debug(f"Current Player in the game: {game_state['players']}")
 
-    initialize_game()
-    logging.debug(f"Game initializing...Current Player in the game: {game_state['players']}")
-
-    agents = [player for player in game_state["players"] if player.startswith("Agent")]
+    agents, avatars = initialize_game()
+    logging.debug(f"Game initializing... Initial game state: {game_state}")
+    logging.debug(f"Successfully Generated AI Agents, agents details: {agents}")
+    logging.debug(f"Successfully Generated avatars for agents: {avatars}")
 
     return jsonify({
         "message": f"All players joined the game.",
-        "agents": agents}
+        "agent_names": list(agents.keys()),
+        "agent_infos": list(agents.values()),
+        "agent_avatars": avatars}
     )
 
 @app.route('/start_game', methods=['POST'])

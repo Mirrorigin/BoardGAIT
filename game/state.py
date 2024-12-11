@@ -1,7 +1,18 @@
 # Game state and initialization
 
+import logging
 import random
 import time
+
+# Configuration logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        # logging.FileHandler("game_debug.log"),    # Output to files
+        logging.StreamHandler()  # 同时输出到控制台
+    ]
+)
 
 # Configurable player numbers
 NUM_PLAYERS = 4  # Default: 4 players
@@ -30,22 +41,27 @@ word_library = [
     ("table", "chair")
 ]
 
-# Agent names (can be replaced by AI later)
-agent_pool = [
-    "Agent Alpha",
-    "Agent Bravo",
-    "Agent Charlie",
-    "Agent Delta"
-]
+def generate_agent_details():
+    # Use AI
+    agent_infos = {}
+    agent_avatars = []
+    for i in range(NUM_PLAYERS -1):
+        agent_name = f"Agent_{chr(65 + i)}"
+        agent_infos[agent_name] = f"{agent_name} is active"
+        agent_avatars.append(f"https://via.placeholder.com/150?text={agent_name}")  # Mock avatar URL
 
+    logging.debug(f"Successfully Generated AI Agents! {agent_infos}")
+    return agent_infos, agent_avatars
 
 def initialize_game():
 
-    time.sleep(5)   # mock
+    time.sleep(2)   # mock
 
-    # Assign names
+    # Generate agents
+    agents, avatars = generate_agent_details()
+
     # Assign AI Agent names
-    agent_names = random.sample(agent_pool, NUM_PLAYERS - 1)
+    agent_names = agents.keys()
     game_state["players"].extend(agent_names)
 
     if len(game_state["players"]) < 4:
@@ -68,9 +84,11 @@ def initialize_game():
     game_state["game_over"] = False
     game_state["winner"] = None
 
+    return agents, avatars
+
 def reset_game_state():
+
     global game_state
-    # print("Before reset in function:", game_state)
     game_state.clear()
     game_state.update({
         "players": [],
