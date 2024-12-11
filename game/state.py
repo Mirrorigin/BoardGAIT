@@ -1,18 +1,7 @@
 # Game state and initialization
 
-import logging
 import random
 import time
-
-# Configuration logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        # logging.FileHandler("game_debug.log"),    # Output to files
-        logging.StreamHandler()  # 同时输出到控制台
-    ]
-)
 
 # Configurable player numbers
 NUM_PLAYERS = 4  # Default: 4 players
@@ -50,7 +39,6 @@ def generate_agent_details():
         agent_infos[agent_name] = f"{agent_name} is active"
         agent_avatars.append(f"https://via.placeholder.com/150?text={agent_name}")  # Mock avatar URL
 
-    logging.debug(f"Successfully Generated AI Agents! {agent_infos}")
     return agent_infos, agent_avatars
 
 def initialize_game():

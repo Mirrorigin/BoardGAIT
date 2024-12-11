@@ -4,8 +4,8 @@ import random
 import logging
 from flask import Flask, jsonify, request, render_template
 from game.state import game_state, initialize_game, reset_game_state
-from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
-from utils.ai_mock import initialize_ai_agent_mock, generate_ai_mock, generate_ai_mock
+# from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
+from utils.ai_mock import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
 # from game.logic import handle_describe, handle_vote, handle_eliminate
 
 app = Flask(__name__)
@@ -22,9 +22,12 @@ logging.basicConfig(
 
 @app.before_request
 def clear_game_state_on_refresh():
-    """Clear game_state when the page loads"""
-    logging.debug(f"Reset game_state: {game_state}")
-    reset_game_state()
+    """Reset game state only for the first page load."""
+    referer = request.headers.get('Referer')
+
+    if not referer or "index.html" in referer:
+        logging.debug(f"Reset game_state: {game_state}")
+        reset_game_state()
 
 @app.route('/')
 def home():
@@ -69,6 +72,8 @@ def start_game():
             # For AI Agents, initialize and pass the word
             if player_name.startswith("Agent"):
                 initialize_ai_agent(player_name, game_state["players"], word)
+
+        logging.debug(f"Player Info: {player_info}")
 
         # Returns message for all players
         return jsonify({

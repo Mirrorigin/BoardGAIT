@@ -45,9 +45,20 @@
 
         <!-- Slide 3: Gameplay -->
         <div class="section">
-            <h2>Game On!</h2>
-            <p>Enjoy the game.</p>
+            <div id="current-player-word" class="player-word-container">
+                <span class="word-label">Your Word:</span>
+                <p id="player-word">[Player's Word]</p>
+            </div>
+
+            <div class="description-input-container" style="display: none;">
+                <input type="text" id="description-input" placeholder="Enter your description..." />
+                <button id="submit-description-button" onclick="submitDescription()" class="submit-button">
+                    &#10003;
+                </button>
+            </div>
         </div>
+
+
 
     </div>
 

@@ -9,6 +9,7 @@ new fullpage('#fullpage', {
 
         const agentDisplay = document.getElementById('agent-display-container');
         const startGameButton = document.getElementById('start-game-button');
+        const descriptionContainer = document.querySelector('.description-input-container');
 
         // Control agent-display visible or hidden
         if (destination.index === 1 || destination.index === 2) {
@@ -18,11 +19,18 @@ new fullpage('#fullpage', {
             agentDisplay.style.display = 'none';
         }
 
-        // Control  Start_Game visible or hidden
+        // Control Start_Game visible or hidden
         if (destination.index === 1) {
             startGameButton.style.display = 'block';
         } else {
             startGameButton.style.display = 'none';
+        }
+
+        // Control description-input-container visible or hidden
+        if (destination.index === 2) {
+            descriptionContainer.style.display = 'flex';
+        } else {
+            descriptionContainer.style.display = 'none';
         }
 
         // Prevents access to the second screen if the player name is not entered
@@ -165,6 +173,7 @@ async function startGame() {
         const response = await fetch('/start_game', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ player: playerName }) // Pass playerName if needed
         });
 
         const data = await response.json();
@@ -175,20 +184,57 @@ async function startGame() {
             // Get current player's identity
             const playerInfo = data.player_info[playerName];
             if (playerInfo) {
-                document.getElementById('role-display').textContent = playerInfo.role;
-                document.getElementById('word-display').textContent = playerInfo.word;
+                document.getElementById('player-word').textContent = playerInfo.word;
+                showFlashMessage("Game has started!", "success");
             } else {
                 console.error("Player information not found!");
+                showFlashMessage("Player information not found.", "error");
+                return; // Exit the function if player info is missing
             }
 
-            // Move to the next section
             fullpage_api.moveSectionDown();
+
         } else {
             console.error(data.error);
             showFlashMessage(data.error, "error");
         }
     } catch (error) {
         console.error("Error during start game:", error);
+        showFlashMessage("An error occurred. Please try again.", "error");
+    }
+}
+
+// Function to submit the description
+async function submitDescription() {
+    const description = document.getElementById('description-input').value.trim();
+    if (description === "") {
+        showFlashMessage("Please enter a description before submitting.", "error");
+        return;
+    }
+
+    // Process the description as needed
+    console.log("Description submitted:", description);
+
+    // Clear the input field after submission
+    document.getElementById('description-input').value = "";
+
+    // Optional: Send the description to the server
+    try {
+        const response = await fetch('/describe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ player: playerName, description: description })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            showFlashMessage("Description submitted successfully!", "success");
+            // Additional logic if needed
+        } else {
+            showFlashMessage(data.error || "Failed to submit description.", "error");
+        }
+    } catch (error) {
+        console.error("Error during description submission:", error);
         showFlashMessage("An error occurred. Please try again.", "error");
     }
 }

@@ -10,10 +10,10 @@ body {
     text-align: center;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     height: 100vh;
     pointer-events: none;
+    justify-content: space-between;
 }
 .game-title {
     font-size: 48px;
@@ -106,7 +106,7 @@ button:active {
 }
 
 .flash-message.success {
-    background: rgba(3, 81, 3, 0.9);
+    background: rgba(50, 127, 50, 0.9);
     color: white;
 }
 
@@ -250,8 +250,11 @@ button:active {
 
 #start-game-button {
     position: absolute;
-    bottom: 200px;
+    bottom: 250px;
+    width: 150px;
+    height: 70px;
     left: 50%;
+    font-size: 20px;
     transform: translateX(-50%) translateY(0);
     pointer-events: auto;
     display: none;
@@ -270,4 +273,97 @@ button:active {
 #start-game-button.enabled:hover {
     background: linear-gradient(135deg, #B82601, #813772);
     box-shadow: 0 0 15px rgba(184, 38, 1, 0.8);
+}
+
+/* Slide 3 */
+
+.player-word-container {
+    position: absolute;
+    bottom: 300px;
+    left: 50%;
+    display: flex;
+    flex-direction: row;
+    transform: translateX(-50%);
+    width: 30%; /* Adjust the width to form a rectangle */
+    max-width: 150px;
+    background: linear-gradient(135deg, rgba(184, 38, 1, 0.6),rgba(129, 55, 114, 0.6));
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    gap: 20px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.word-label {
+    font-size: 1em;
+    color: #FFFFFF;
+    margin: 0;
+    line-height: 1.5;
+}
+
+#player-word {
+    font-size: 1.5em;
+    color: #FFD700;
+    font-weight: bold;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Description Input Container */
+.description-input-container {
+    position: absolute;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    flex: 1;
+    max-width: 600px;
+    width: 80%;
+    z-index: 1000;
+    padding: 10px;
+    border-radius: 25px;
+    display: none;
+}
+
+.description-input-container input {
+    flex: 1;
+    padding: 10px 20px;
+    font-size: 1em;
+    border: 2px solid #ccc;
+    border-radius: 25px 0 0 25px;
+    outline: 3px #ed0d4c;
+    pointer-events: auto;
+    height: 50px;
+}
+
+.submit-button {
+    width: 50px;
+    height: 50px;
+    border: none;
+    font-size: 1.5em;
+    border-radius: 0 25px 25px 0;
+    cursor: pointer;
+    pointer-events: auto;
+    outline: none;
+    transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+    background-color: #45a049;
+}
+
+@media (max-width: 600px) {
+    .description-input-container {
+        width: 90%;
+    }
+
+    .description-input-container input {
+        font-size: 0.9em;
+    }
+
+    .submit-button {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
+    }
 }
