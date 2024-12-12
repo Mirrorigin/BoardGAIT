@@ -90,9 +90,11 @@ async function joinGame() {
         if (response.ok) {
             console.log("Game initialized successfully!");
             console.log("Agents:", data.agent_names, data.agent_infos, data.agent_avatars);
-            displayAgents(data.agent_names, data.agent_infos, data.agent_avatars);
-            startGameButton.disabled = false;   // Enable the Start_Game button
-            startGameButton.classList.add('enabled');
+            displayAgents(data.agent_names, data.agent_infos, data.agent_avatars, () => {
+                console.log("All agents displayed. Enabling Start Game button...");
+                startGameButton.disabled = false;   // 启用按钮
+                startGameButton.classList.add('enabled');
+            });
         } else {
             errorMessage.textContent = data.error;
             fullpage_api.moveSectionUp();
@@ -106,14 +108,19 @@ async function joinGame() {
     }
 }
 
-function displayAgents(agent_names, agent_infos, agent_avatars) {
+function displayAgents(agent_names, agent_infos, agent_avatars, onComplete) {
     const container = document.getElementById('agent-display');
     container.innerHTML = "";   // Empty the container
 
     let index = 0;
 
     function showEachAgent() {
-        if (index >= agent_names.length) return; // All agents are displayed successfully
+        if (index >= agent_names.length){
+            if (typeof onComplete === 'function') {
+                onComplete(); // All agents are displayed successfully, callback
+            }
+            return;
+        }
 
         const agentName = agent_names[index];
         const agentInfo = agent_infos[index];
@@ -127,6 +134,7 @@ function displayAgents(agent_names, agent_infos, agent_avatars) {
         const avatar = document.createElement('img');
         avatar.src = agentAvatar
         avatar.alt = agentName;
+        avatar.id = `avatar-${agentName}`; // Add unique ID
         avatar.style.width = "150px";
         avatar.style.height = "150px";
         avatar.style.borderRadius = "50%";
@@ -134,6 +142,7 @@ function displayAgents(agent_names, agent_infos, agent_avatars) {
         const name = document.createElement('p');
         name.textContent = agentName;
         name.style.fontSize = "20px";
+        name.id = `name-${agentName}`
 
         // Add the avatar and name to the container
         agentElement.appendChild(avatar);
@@ -206,6 +215,7 @@ async function startGame() {
 
 // Function to submit the description
 async function submitDescription() {
+
     const description = document.getElementById('description-input').value.trim();
     if (description === "") {
         showFlashMessage("Please enter a description before submitting.", "error");
@@ -217,6 +227,9 @@ async function submitDescription() {
 
     // Clear the input field after submission
     document.getElementById('description-input').value = "";
+    // Disable to input and submit
+    document.getElementById('description-input').disabled = true;
+    document.getElementById('submit-description-button').disabled = true;
 
     // Optional: Send the description to the server
     try {
@@ -228,8 +241,11 @@ async function submitDescription() {
 
         const data = await response.json();
         if (response.ok) {
-            showFlashMessage("Description submitted successfully!", "success");
-            // Additional logic if needed
+            showFlashMessage("All player provided descriptions!", "success");
+            setTimeout(() => {
+                removeHighlightCurrentPlayer();
+                console.log("Highlights removed after 5 seconds.");
+            }, 5000);
         } else {
             showFlashMessage(data.error || "Failed to submit description.", "error");
         }
@@ -237,4 +253,49 @@ async function submitDescription() {
         console.error("Error during description submission:", error);
         showFlashMessage("An error occurred. Please try again.", "error");
     }
+}
+
+// Connect to WebSocket
+const socket = io();
+
+// Listen for a connection event
+socket.on('connect', () => {
+    console.log('Successfully connected to the server');
+});
+
+// Listen to 'player_describing'
+socket.on('description_generated', function(data) {
+    const player = data.player;
+    console.log("Socket received the data!")
+    // Update page effect: Make the current player avatar larger
+    highlightCurrentPlayer(player);
+});
+
+function highlightCurrentPlayer(player) {
+    // Remove highlight from all avatars
+    removeHighlightCurrentPlayer()
+
+    // Highlight the current player avatar
+    const currentPlayerAvatar = document.querySelector(`#avatar-${player}`);
+    if (currentPlayerAvatar) {
+        currentPlayerAvatar.classList.add('highlight');
+        console.log(`Highlighted player: ${player}`);
+    } else {
+        console.error(`Player avatar not found: #avatar-${player}`);
+    }
+    // Highlight the current player name
+    const currentPlayerName = document.querySelector(`#name-${player}`);
+    if (currentPlayerName) {
+        currentPlayerName.classList.add('highlight');
+    }
+}
+
+function removeHighlightCurrentPlayer() {
+    document.querySelectorAll('#agent-display img').forEach(avatar => {
+        // console.log(avatar)
+        avatar.classList.remove('highlight');
+    });
+    document.querySelectorAll('#agent-display p').forEach(name => {
+        name.classList.remove('highlight');
+    });
 }

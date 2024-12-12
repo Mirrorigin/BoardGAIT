@@ -1,6 +1,9 @@
 # For testing... save tokens!
 
+import time
 import random
+from socketio_config import socketio, app
+
 def initialize_ai_agent(agent_name, players, word):
     # Mock implementation: simply print the initialization parameters
     print(f"Mock initialize: {agent_name} with players {players} and word {word}")
@@ -17,7 +20,18 @@ def generate_ai_descriptions(game_state):
     for ai_player in [p for p in game_state["active_players"] if
                       p.startswith("Agent") and game_state["descriptions"].get(p) is None]:
         mock_descriptions[ai_player] = f"Mock description for {ai_player}"
-        game_state["descriptions"][ai_player].update(mock_descriptions)
+
+        game_state["descriptions"][ai_player] = mock_descriptions
+
+        time.sleep(2)  # mock
+
+        print(f"Descriptions for {ai_player} is: {mock_descriptions[ai_player]}")
+
+        with app.app_context():
+            socketio.emit('description_generated', {
+                "player": ai_player,
+                "description": mock_descriptions[ai_player]
+            })
 
     return game_state["descriptions"]
 

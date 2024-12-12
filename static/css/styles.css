@@ -6,6 +6,10 @@ body {
     overflow: hidden;
     background: linear-gradient(135deg, #062F4F, #B82601);
 }
+#fp-nav a {
+    pointer-events: none;
+    cursor: default;
+}
 .section {
     text-align: center;
     display: flex;
@@ -84,9 +88,15 @@ button:hover {
     transform: translateY(-3px);
     box-shadow: 0 0 15px rgba(184, 38, 1, 0.8);
 }
+
 button:active {
     transform: translateY(2px);
     box-shadow: 0 4px 10px rgba(90, 85, 78, 0.2);
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .flash-message {
@@ -234,6 +244,12 @@ button:active {
     position: relative;
     z-index: 10;
     pointer-events: auto;
+    transition: transform 0.3s ease;
+}
+
+#agent-display img.highlight {
+    transform: scale(1.2);
+    outline: 1px solid #a18df0;
 }
 
 #agent-display img:hover {
@@ -242,10 +258,15 @@ button:active {
 }
 
 #agent-display p {
-    margin-top: 20px;
+    margin-top: 40px;
     font-size: 20px;
     font-weight: bold;
     color: #ffffff;
+}
+
+#agent-display p.highlight {
+    color: #d89e18;
+    font-weight: bold;
 }
 
 #start-game-button {
@@ -263,11 +284,6 @@ button:active {
 #start-game-button.enabled {
     cursor: pointer;
     opacity: 1;
-}
-
-#start-game-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
 }
 
 #start-game-button.enabled:hover {
@@ -293,6 +309,14 @@ button:active {
     gap: 20px;
     align-items: center;
     justify-content: space-between;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.player-word-container:hover {
+    transform: translateX(-50%) scale(1.2);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
 }
 
 .word-label {

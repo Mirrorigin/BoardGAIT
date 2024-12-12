@@ -3,12 +3,11 @@
 import random
 import logging
 from flask import Flask, jsonify, request, render_template
+from socketio_config import socketio, app
 from game.state import game_state, initialize_game, reset_game_state
 # from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
 from utils.ai_mock import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
 # from game.logic import handle_describe, handle_vote, handle_eliminate
-
-app = Flask(__name__)
 
 # Configuration logging
 logging.basicConfig(
@@ -16,9 +15,11 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         # logging.FileHandler("game_debug.log"),    # Output to files
-        logging.StreamHandler()  # 同时输出到控制台
+        logging.StreamHandler()
     ]
 )
+
+# Missing functionality: if the players says the secret word! They cannot send the message!
 
 @app.before_request
 def clear_game_state_on_refresh():
@@ -83,44 +84,40 @@ def start_game():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
-@app.route('/get_identity', methods=['POST'])
-def get_identity():
-    data = request.json
-    player_name = data.get("player")
-
-    if player_name not in game_state["players"]:
-        return jsonify({"error": "Player not found."}), 404
-
-    player_index = game_state["players"].index(player_name)
-    role = game_state["roles"][player_index]
-    word = game_state["words"][role]
-
-    return jsonify({
-        "player": player_name,
-        "role": role,
-        "word": word
-    })
-
 # Players give their description
 @app.route('/describe', methods=['POST'])
 def describe():
-    data = request.json
-    player = data.get("player")
-    player_description = data.get("description")
+    try:
+        data = request.json
+        if not data:
+            return jsonify({"error": "Invalid JSON data"}), 400
 
-    if player in game_state["descriptions"]:
-        game_state["descriptions"][player] = player_description
+        player = data.get("player")
+        player_description = data.get("description")
+        if not player or not player_description:
+            return jsonify({"error": "Missing player or description"}), 400
 
-    generate_ai_descriptions(game_state)
+        logging.debug(f"Player: {player}, Description: {player_description}")
 
-    # Check if all players have described
-    if None in game_state["descriptions"].values():
-        return jsonify({"message": f"{player} provided their description."})
+        if player in game_state["descriptions"]:
+            game_state["descriptions"][player] = player_description
 
-    return jsonify({
-        "message": "All players have described their word.",
-        "descriptions": game_state["descriptions"]
-    })
+        generate_ai_descriptions(game_state)
+
+        logging.debug("Successfully generated all description!")
+        logging.debug(f"Current game sate after description: {game_state}")
+
+        # Check if all players have described
+        if None in game_state["descriptions"].values():
+            return jsonify({"message": f"{player} provided their description."})
+
+        return jsonify({
+            "message": "All players have described their word.",
+            "descriptions": game_state["descriptions"]
+        })
+    except Exception as e:
+        print(f"Error processing request: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/vote', methods=['POST'])
 def vote():
@@ -218,5 +215,13 @@ def next_turn():
         "votes": game_state["votes"]
     })
 
+@socketio.on('connect')
+def handle_connect():
+    print("A client connected")
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print("A client disconnected")
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    socketio.run(app, debug=True)

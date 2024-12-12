@@ -58,14 +58,13 @@
             </div>
         </div>
 
-
-
     </div>
 
     <div id="flash-message" class="flash-message">message</div>
     <div id="tooltip" class="tooltip"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/4.0.12/fullpage.min.js"></script>
-    <script src="/static/js/script.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="/static/js/script.js"></script> <!-- MUST first load the Socket.IO client library before loading script files (script.js) -->
 </body>
 </html>

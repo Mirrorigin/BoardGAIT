@@ -63,7 +63,7 @@ def initialize_game():
     word_pair = random.choice(word_library)
     game_state["words"] = {"civilian": word_pair[0], "undercover": word_pair[1]}
 
-    # Reset game state
+    # Initialize game state
     game_state["descriptions"] = {player: None for player in game_state["players"]}
     game_state["votes"] = {player: 0 for player in game_state["players"]}
     game_state["eliminated"] = []
