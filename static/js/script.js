@@ -12,7 +12,7 @@ new fullpage('#fullpage', {
         const descriptionContainer = document.querySelector('.description-input-container');
 
         // Control agent-display visible or hidden
-        if (destination.index === 1 || destination.index === 2) {
+        if (destination.anchor === "agent-display-page" || destination.anchor === "description-page") {
             agentDisplay.style.display = 'block';
             console.log('Agent Display Container Style:', agentDisplay.style.display);
         } else {
@@ -20,21 +20,21 @@ new fullpage('#fullpage', {
         }
 
         // Control Start_Game visible or hidden
-        if (destination.index === 1) {
+        if (destination.anchor === "agent-display-page") {
             startGameButton.style.display = 'block';
         } else {
             startGameButton.style.display = 'none';
         }
 
         // Control description-input-container visible or hidden
-        if (destination.index === 2) {
+        if (destination.anchor === "description-page") {
             descriptionContainer.style.display = 'flex';
         } else {
             descriptionContainer.style.display = 'none';
         }
 
         // Prevents access to the second screen if the player name is not entered
-        if (destination.index === 1 && !playerName) {
+        if ((destination.anchor ==="agent-display-page" && !playerName)) {
             showFlashMessage('Please enter your name before proceeding.', "error");
             return false;
         }
@@ -90,9 +90,9 @@ async function joinGame() {
         if (response.ok) {
             console.log("Game initialized successfully!");
             console.log("Agents:", data.agent_names, data.agent_infos, data.agent_avatars);
-            displayAgents(data.agent_names, data.agent_infos, data.agent_avatars, () => {
+            displayAgents(data.agent_names, data.agent_infos, data.agent_avatars,() => {
                 console.log("All agents displayed. Enabling Start Game button...");
-                startGameButton.disabled = false;   // 启用按钮
+                startGameButton.disabled = false;
                 startGameButton.classList.add('enabled');
             });
         } else {
@@ -142,7 +142,7 @@ function displayAgents(agent_names, agent_infos, agent_avatars, onComplete) {
         const nameButton = document.createElement('button');
         nameButton.textContent = agentName;
         nameButton.id = `agent-${agentName}`;
-        nameButton.disabled = true;  // Initially disabled
+        nameButton.disabled = true;
         nameButton.classList.add('agent-button');
 
         // Add the avatar and name to the container
@@ -236,7 +236,7 @@ async function submitDescription() {
     document.getElementById('description-input').disabled = true;
     document.getElementById('submit-description-button').disabled = true;
 
-    // Optional: Send the description to the server
+    // Send the description to the server
     try {
         const response = await fetch('/describe', {
             method: 'POST',
@@ -248,8 +248,8 @@ async function submitDescription() {
             showFlashMessage("All player provided descriptions!", "success");
             setTimeout(() => {
                 removeHighlightCurrentPlayer();
-                console.log("Highlights removed after 5 seconds.");
-            }, 5000);
+                console.log("Highlights removed after 3 seconds.");
+            }, 3000);
         } else {
             showFlashMessage(data.error || "Failed to submit description.", "error");
         }
@@ -287,9 +287,10 @@ socket.on('player_description_valid', function(data) {
 });
 
 socket.on('all_descriptions_generated', function(data) {
+    const activePlayers = data.active_players;
     // Enable the vote buttons now that all descriptions are generated
     console.log("Socket received the data!")
-    enableVotingButtons()
+    enableVotingButtons(activePlayers)
 });
 
 function highlightCurrentPlayer(player) {
@@ -349,18 +350,27 @@ function addDescriptionToLog(player, description) {
     }
 }
 
-function enableVotingButtons() {
+function enableVotingButtons(activePlayers = []) {
     const buttons = document.querySelectorAll('.agent-button');
     console.log(buttons);
     buttons.forEach(button => {
-        button.disabled = false; // Enable the button after descriptions are done
-        console.log(`Button enabled: ${button.textContent}`);
+        const playerName = button.textContent;
+
+        // The button is enabled only when the player is in the activePlayers list
+        if (activePlayers.includes(playerName)) {
+            button.disabled = false;
+        } else {
+            button.disabled = true;
+        }
     });
 }
 
 async function vote(target) {
     // Here, you can get the current player and send the vote request
     const voter = playerName;  // Use the global playerName variable
+    console.log("You choose:", target)
+    showFlashMessage(`You voted for ${target}!`, "success");
+    fullpage_api.moveTo('results-page');
 
     try {
         const response = await fetch('/vote', {
@@ -370,9 +380,24 @@ async function vote(target) {
         });
 
         const data = await response.json();
+
         if (response.ok) {
             console.log("Vote recorded:", data);
-            showFlashMessage(`${voter} voted for ${target}.`, "success");
+
+            if (data.game_status === "exit") {
+                // player eliminated
+                alert(`${playerName}, you have been eliminated. Refresh the page to exit.`);
+            } else if (data.game_status === "win") {    // Win
+                 fullpage_api.moveTo('win-page');
+            } else {                                    // Next turn
+                showFlashMessage(data.message, "info");
+                fullpage_api.moveTo('description-page');
+
+                resetDescriptionInput();
+                disableVotingButtons();
+                clearPreviousRoundData();
+                grayOutInactiveAgents(data.active_players)
+            }
         } else {
             console.error("Vote error:", data.error);
             showFlashMessage(data.error || "An error occurred during voting.", "error");
@@ -382,3 +407,53 @@ async function vote(target) {
         showFlashMessage("An error occurred. Please try again.", "error");
     }
 }
+
+function resetDescriptionInput() {
+    const descriptionInput = document.getElementById('description-input');
+    const submitButton = document.getElementById('submit-description-button');
+
+    if (descriptionInput && submitButton) {
+
+        descriptionInput.value = "";
+
+        descriptionInput.disabled = false;
+        submitButton.disabled = false;
+    }
+}
+
+function disableVotingButtons() {
+    const buttons = document.querySelectorAll('.agent-button');
+    console.log(buttons);
+    buttons.forEach(button => {
+        button.disabled = true;
+    });
+}
+
+function clearPreviousRoundData() {
+
+    const descriptionLog = document.getElementById('description-log');
+    if (descriptionLog) {
+        descriptionLog.innerHTML = "";
+    }
+
+    const descriptionLogContainer = document.getElementById("description-log-container");
+    if (descriptionLogContainer) {
+        descriptionLogContainer.classList.remove('visible');
+    }
+}
+
+function grayOutInactiveAgents(activePlayers) {
+    const agentButtons = document.querySelectorAll('.agent-button');
+    const agentAvatars = document.querySelectorAll('#agent-display img');
+
+    agentAvatars.forEach(avatar => {
+        const playerName = avatar.alt;
+        if (!activePlayers.includes(playerName)) {
+            // If the player is not on the active list, the avatar turns gray
+            avatar.style.filter = "grayscale(100%)";
+        }
+    });
+}
+
+
+

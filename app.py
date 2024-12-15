@@ -128,14 +128,14 @@ def describe():
 @app.route('/vote', methods=['POST'])
 def vote():
     data = request.json
-    voter = data.get("voter")   #
+    voter = data.get("voter")
     target = data.get("target")
 
-    # Player Vote
-    if target in game_state["votes"]:
-        game_state["votes"][target] += 1
-    else:
-        return jsonify({"error": "Invalid vote target."})
+    # Validation
+    if target not in game_state["active_players"]:
+        return jsonify({"error": "Invalid vote target."}), 400
+
+    game_state["votes"][target] += 1
 
     generate_ai_votes(game_state)
 
@@ -143,15 +143,34 @@ def vote():
     total_votes = sum(game_state["votes"].values())
     if total_votes == len(game_state["active_players"]):
         # Call eliminate logic
-        elimination_result = eliminate()
+        eliminated_player = eliminate()
 
-        # Return the voting log and elimination results
-        return jsonify({
-            "message": f"{voter} voted for {target}. AI players also voted.",
-            "votes": game_state["votes"],
-            "ai_votes": game_state["votes"],
-            "elimination_result": elimination_result.json
-        })
+        # Check the result of elimination
+        if eliminated_player == voter:
+            # If the voter is eliminated, inform them and prompt exit
+            return jsonify({
+                "game_status": "exit"
+            })
+
+        # Check if the game is over (win condition)
+        if game_state["game_over"]:
+            # If game over, show the win page
+            return jsonify({
+                "message": f"Game Over! {game_state['winner']} wins!",
+                "game_status": "win"
+            })
+        else:
+            # If the game continues, trigger the next turn
+            next_turn()
+            return jsonify({
+                "game_status": "continue",
+                "eliminated": eliminated_player,
+                "active_players": list(game_state["active_players"])
+            })
+
+    return jsonify({
+        "message": f"{voter} voted for {target}. Waiting for other votes..."
+    })
 
 @app.route('/eliminate', methods=['POST'])
 def eliminate():
@@ -159,14 +178,15 @@ def eliminate():
     max_votes = max(game_state["votes"].values(), default=0)
     candidates = [player for player, votes in game_state["votes"].items() if votes == max_votes]
 
-    # Check for a tie
-    if len(candidates) > 1:
-        return jsonify({
-            "message": "It's a tie! Additional statements are required from tied players.",
-            "tie": True,
-            "tied_players": candidates
-        })
+    # # Check for a tie
+    # if len(candidates) > 1:
+    #     return jsonify({
+    #         "message": "It's a tie! Additional statements are required from tied players.",
+    #         "tie": True,
+    #         "tied_players": candidates
+    #     })
 
+    # 先只考虑取第一个玩家消除！
     eliminated_player = candidates[0]
     game_state["eliminated"].append(eliminated_player)
     game_state["active_players"].remove(eliminated_player)
@@ -184,13 +204,7 @@ def eliminate():
         game_state["game_over"] = True
         game_state["winner"] = "Undercover"
 
-    return jsonify({
-        "message": f"{eliminated_player} has been eliminated.",
-        "eliminated": eliminated_player,
-        "game_over": game_state["game_over"],
-        "winner": game_state["winner"],
-        "active_players": game_state["active_players"]
-    })
+    return eliminated_player
 
 @app.route('/next_turn', methods=['POST'])
 def next_turn():
@@ -203,23 +217,7 @@ def next_turn():
     game_state["descriptions"] = {player: None for player in game_state["active_players"]}
     game_state["votes"] = {player: 0 for player in game_state["active_players"]}
 
-    # Check if there is only 1 player or the game is over
-    if len(game_state["active_players"]) <= 1 or game_state["game_over"]:
-        return jsonify({
-            "message": "Game over. No further turns.",
-            "game_over": True,
-            "winner": game_state["winner"]
-        })
-
     print("Current game state:", game_state)
-
-    return jsonify({
-        "message": "Next turn started.",
-        "current_turn": game_state["current_turn"],
-        "active_players": game_state["active_players"],
-        "descriptions": game_state["descriptions"],
-        "votes": game_state["votes"]
-    })
 
 @socketio.on('connect')
 def handle_connect():

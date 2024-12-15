@@ -1,6 +1,7 @@
 import os
 from openai import OpenAI, OpenAIError
 from utils.text_to_speech import audio_gen
+from socketio_config import socketio, app
 # from secret import OPENAI_API_KEY
 
 openai_client = OpenAI()
@@ -88,6 +89,7 @@ def generate_ai_descriptions(game_state):
     """
 
     # Generate descriptions for active AI agents
+    ai_descriptions = {}
     for ai_player in [p for p in game_state["active_players"] if
                       p.startswith("Agent") and game_state["descriptions"][p] is None]:
         player_index = game_state["players"].index(ai_player)
@@ -99,13 +101,24 @@ def generate_ai_descriptions(game_state):
             "word": word,
             "context": game_state['descriptions']
         }
-        ai_description = call_openai_api("describe", payload)
+        ai_descriptions[ai_player] = call_openai_api("describe", payload)
 
+        with app.app_context():
+            socketio.emit('ai_description_generated', {
+                "player": ai_player,
+                "player_description": ai_descriptions[ai_player]
+            })
         # Play generated audio
-        audio_gen(ai_description)
+        audio_gen(ai_descriptions[ai_player])
 
         # Update game state
-        game_state["descriptions"][ai_player] = ai_description
+        game_state["descriptions"][ai_player] = ai_descriptions[ai_player]
+
+    # Check if all AI descriptions are generated, and if so, emit the signal to enable the vote button
+    print(len(ai_descriptions), len(game_state["active_players"]) - 1)
+    if len(ai_descriptions) == len(game_state["active_players"]) - 1:
+        print("Finished description generation!")
+        socketio.emit('all_descriptions_generated', {'status': 'enable_vote_buttons'})
 
     return game_state["descriptions"]
 

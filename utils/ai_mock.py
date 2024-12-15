@@ -21,7 +21,7 @@ def generate_ai_descriptions(game_state):
                       p.startswith("Agent") and game_state["descriptions"].get(p) is None]:
         mock_descriptions[ai_player] = f"Mock description for {ai_player}"
 
-        game_state["descriptions"][ai_player] = mock_descriptions
+        game_state["descriptions"][ai_player] = mock_descriptions[ai_player]
 
         time.sleep(2)  # mock
 
@@ -37,7 +37,7 @@ def generate_ai_descriptions(game_state):
     print(len(mock_descriptions), len(game_state["active_players"])-1)
     if len(mock_descriptions) == len(game_state["active_players"]) - 1:
         print("Finished description generation!")
-        socketio.emit('all_descriptions_generated', {'status': 'enable_vote_buttons'})
+        socketio.emit('all_descriptions_generated', {"active_players": game_state["active_players"]})
 
     return game_state["descriptions"]
 
@@ -54,5 +54,7 @@ def generate_ai_votes(game_state):
         vote_target = random.choice(options)
         if vote_target in game_state["votes"]:
             game_state["votes"][vote_target] += 1
+
+    time.sleep(3)
 
     return game_state["votes"]

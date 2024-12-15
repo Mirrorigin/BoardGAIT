@@ -486,3 +486,46 @@ button:disabled {
 #description-log li:hover {
     background: rgba(255, 255, 255, 0.2);
 }
+
+/* result-page */
+
+.results-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    background: #333;
+    text-align: center;
+    padding: 20px;
+}
+
+.results-container h1 {
+    margin-bottom: 20px;
+    font-size: 3em;
+}
+
+.results-container p {
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.loading-animation {
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #eee;
+    border-top: 5px solid #E6A8B7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
