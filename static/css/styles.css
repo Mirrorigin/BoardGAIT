@@ -233,6 +233,8 @@ button:disabled {
     text-align: center;
     margin: 10px;
     position: relative;
+    flex-direction: column;
+    display: flex;
 }
 
 #agent-display img {
@@ -257,17 +259,52 @@ button:disabled {
     cursor: pointer;
 }
 
-#agent-display p {
+.agent-button {
     margin-top: 40px;
-    font-size: 20px;
+    padding: 15px;
+    font-size: 18px;
     font-weight: bold;
-    color: #ffffff;
+    background: transparent;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: none
 }
 
-#agent-display p.highlight {
+.agent-button:hover {
+    background: linear-gradient(135deg, rgb(184, 38, 1), rgb(129, 55, 114));
+    transform: translateY(-3px);
+    box-shadow: 0 0 15px rgba(184, 38, 1, 0.8);
+}
+
+.agent-button:disabled {
+    background: transparent;
+    color: white;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+    opacity: 1;
+}
+
+.agent-button.highlight {
     color: #d89e18;
     font-weight: bold;
 }
+
+/*#agent-display p {*/
+/*    margin-top: 40px;*/
+/*    font-size: 20px;*/
+/*    font-weight: bold;*/
+/*    color: #ffffff;*/
+/*}*/
+
+/*#agent-display p.highlight {*/
+/*    color: #d89e18;*/
+/*    font-weight: bold;*/
+/*}*/
+
 
 #start-game-button {
     position: absolute;

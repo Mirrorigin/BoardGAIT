@@ -139,14 +139,15 @@ function displayAgents(agent_names, agent_infos, agent_avatars, onComplete) {
         avatar.style.height = "150px";
         avatar.style.borderRadius = "50%";
 
-        const name = document.createElement('p');
-        name.textContent = agentName;
-        name.style.fontSize = "20px";
-        name.id = `name-${agentName}`
+        const nameButton = document.createElement('button');
+        nameButton.textContent = agentName;
+        nameButton.id = `agent-${agentName}`;
+        nameButton.disabled = true;  // Initially disabled
+        nameButton.classList.add('agent-button');
 
         // Add the avatar and name to the container
         agentElement.appendChild(avatar);
-        agentElement.appendChild(name);
+        agentElement.appendChild(nameButton);
 
         // Add hover event to show tooltip
         avatar.addEventListener('mouseenter', (event) => {
@@ -167,6 +168,10 @@ function displayAgents(agent_names, agent_infos, agent_avatars, onComplete) {
             tooltip.style.visibility = 'hidden';
             tooltip.style.opacity = '0';
         });
+
+        nameButton.onclick = function() {
+            vote(agentName); // Voting function when the button is clicked
+        };
 
         // Add containers to the display area
         container.appendChild(agentElement);
@@ -262,7 +267,7 @@ socket.on('connect', () => {
     console.log('Successfully connected to the server');
 });
 
-// Listen to 'player_describing'
+// Listen to 'AI_player_describing'
 socket.on('ai_description_generated', function(data) {
     const player = data.player;
     console.log("Socket received the data!")
@@ -281,6 +286,12 @@ socket.on('player_description_valid', function(data) {
     addDescriptionToLog(player, player_description)
 });
 
+socket.on('all_descriptions_generated', function(data) {
+    // Enable the vote buttons now that all descriptions are generated
+    console.log("Socket received the data!")
+    enableVotingButtons()
+});
+
 function highlightCurrentPlayer(player) {
     // Remove highlight from all avatars
     removeHighlightCurrentPlayer()
@@ -294,7 +305,7 @@ function highlightCurrentPlayer(player) {
         console.error(`Player avatar not found: #avatar-${player}`);
     }
     // Highlight the current player name
-    const currentPlayerName = document.querySelector(`#name-${player}`);
+    const currentPlayerName = document.querySelector(`#agent-${player}`);
     if (currentPlayerName) {
         currentPlayerName.classList.add('highlight');
     }
@@ -305,8 +316,8 @@ function removeHighlightCurrentPlayer() {
         // console.log(avatar)
         avatar.classList.remove('highlight');
     });
-    document.querySelectorAll('#agent-display p').forEach(name => {
-        name.classList.remove('highlight');
+    document.querySelectorAll('#agent-display .agent-button').forEach(nameButton => {
+        nameButton.classList.remove('highlight');
     });
 }
 
@@ -335,5 +346,39 @@ function addDescriptionToLog(player, description) {
 
     if (!descriptionLogContainer.classList.contains('visible')) {
         descriptionLogContainer.classList.add('visible');
+    }
+}
+
+function enableVotingButtons() {
+    const buttons = document.querySelectorAll('.agent-button');
+    console.log(buttons);
+    buttons.forEach(button => {
+        button.disabled = false; // Enable the button after descriptions are done
+        console.log(`Button enabled: ${button.textContent}`);
+    });
+}
+
+async function vote(target) {
+    // Here, you can get the current player and send the vote request
+    const voter = playerName;  // Use the global playerName variable
+
+    try {
+        const response = await fetch('/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ voter: voter, target: target })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            console.log("Vote recorded:", data);
+            showFlashMessage(`${voter} voted for ${target}.`, "success");
+        } else {
+            console.error("Vote error:", data.error);
+            showFlashMessage(data.error || "An error occurred during voting.", "error");
+        }
+    } catch (error) {
+        console.error("Error during voting:", error);
+        showFlashMessage("An error occurred. Please try again.", "error");
     }
 }

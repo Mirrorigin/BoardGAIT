@@ -33,6 +33,12 @@ def generate_ai_descriptions(game_state):
                 "player_description": mock_descriptions[ai_player]
             })
 
+    # Check if all AI descriptions are generated, and if so, emit the signal to enable the vote button
+    print(len(mock_descriptions), len(game_state["active_players"])-1)
+    if len(mock_descriptions) == len(game_state["active_players"]) - 1:
+        print("Finished description generation!")
+        socketio.emit('all_descriptions_generated', {'status': 'enable_vote_buttons'})
+
     return game_state["descriptions"]
 
 
