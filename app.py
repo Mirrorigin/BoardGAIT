@@ -100,6 +100,12 @@ def describe():
         logging.debug(f"Player: {player}, Description: {player_description}")
 
         if player in game_state["descriptions"]:
+            if player_description:  # 这里加个判断就是描述有没有包含敏感词
+                with app.app_context():
+                    socketio.emit('player_description_valid', {
+                        "player": player,
+                        "player_description": player_description
+                    })
             game_state["descriptions"][player] = player_description
 
         generate_ai_descriptions(game_state)

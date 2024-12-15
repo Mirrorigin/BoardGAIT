@@ -238,7 +238,6 @@ async function submitDescription() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ player: playerName, description: description })
         });
-
         const data = await response.json();
         if (response.ok) {
             showFlashMessage("All player provided descriptions!", "success");
@@ -264,11 +263,22 @@ socket.on('connect', () => {
 });
 
 // Listen to 'player_describing'
-socket.on('description_generated', function(data) {
+socket.on('ai_description_generated', function(data) {
     const player = data.player;
     console.log("Socket received the data!")
     // Update page effect: Make the current player avatar larger
     highlightCurrentPlayer(player);
+    // Update page effect: Make the current player avatar larger
+    addDescriptionToLog(player, data.player_description)
+});
+
+// Listen to 'player_describing'
+socket.on('player_description_valid', function(data) {
+    const player = data.player;
+    const player_description = data.player_description;
+    console.log("Socket received the data!")
+    // Update page effect: Make the current player avatar larger
+    addDescriptionToLog(player, player_description)
 });
 
 function highlightCurrentPlayer(player) {
@@ -298,4 +308,32 @@ function removeHighlightCurrentPlayer() {
     document.querySelectorAll('#agent-display p').forEach(name => {
         name.classList.remove('highlight');
     });
+}
+
+function addDescriptionToLog(player, description) {
+    const descriptionLogContainer = document.getElementById('description-log-container');
+    const descriptionLog = document.getElementById('description-log');
+    const logItem = document.createElement('li');
+
+    // Create a span for the player's name and apply color
+    const playerSpan = document.createElement('span');
+    playerSpan.textContent = `${player}: `;
+    playerSpan.style.color = '#E6A8B7'; // You can change this color to whatever you like
+    playerSpan.style.fontWeight = 'bold';
+
+    // Create a span for the description and apply color
+    const descriptionSpan = document.createElement('span');
+    descriptionSpan.textContent = description;
+    descriptionSpan.style.color = '#FFFFFF'; // You can change this color to whatever you like
+
+    // Append the player and description spans to the log item
+    logItem.appendChild(playerSpan);
+    logItem.appendChild(descriptionSpan);
+
+    // Add the log item to the description log
+    descriptionLog.appendChild(logItem);
+
+    if (!descriptionLogContainer.classList.contains('visible')) {
+        descriptionLogContainer.classList.add('visible');
+    }
 }

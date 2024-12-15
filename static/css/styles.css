@@ -181,7 +181,7 @@ button:disabled {
     transform: translateX(-50%);
     height: 300px;
     width: 80%;
-    margin-top: 50px;
+    margin-top: 180px;
     text-align: center;
     padding-bottom: 20px;
     display: none; /* Hidden by default */
@@ -271,7 +271,7 @@ button:disabled {
 
 #start-game-button {
     position: absolute;
-    bottom: 250px;
+    bottom: 180px;
     width: 150px;
     height: 70px;
     left: 50%;
@@ -295,7 +295,7 @@ button:disabled {
 
 .player-word-container {
     position: absolute;
-    bottom: 300px;
+    bottom: 190px;
     left: 50%;
     display: flex;
     flex-direction: row;
@@ -337,7 +337,7 @@ button:disabled {
 /* Description Input Container */
 .description-input-container {
     position: absolute;
-    bottom: 150px;
+    bottom: 50px;
     left: 50%;
     transform: translateX(-50%);
     flex: 1;
@@ -390,4 +390,62 @@ button:disabled {
         height: 40px;
         font-size: 1.2em;
     }
+}
+
+#description-log-container {
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 65%;
+    background: linear-gradient(135deg, rgba(180, 40, 40, 0.9), rgba(120, 20, 20, 0.9));
+    color: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    opacity: 0.2;
+    visibility: hidden;
+    transition: opacity 0.5s ease, visibility 0.5s ease, top 0.5s ease;
+    pointer-events: auto;
+    overflow: auto;
+    max-height: 380px;
+}
+
+#description-log-container.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+#description-log-container h3 {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    text-align: center;
+    color: #ffc107;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#description-log {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    max-height: 180px;
+    overflow-y: auto;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+#description-log li {
+    background: rgba(255, 255, 255, 0.1);
+    margin: 5px 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #f8f9fa;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    transition: background 0.3s ease;
+}
+
+#description-log li:hover {
+    background: rgba(255, 255, 255, 0.2);
 }

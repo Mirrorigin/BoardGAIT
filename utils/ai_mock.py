@@ -28,9 +28,9 @@ def generate_ai_descriptions(game_state):
         print(f"Descriptions for {ai_player} is: {mock_descriptions[ai_player]}")
 
         with app.app_context():
-            socketio.emit('description_generated', {
+            socketio.emit('ai_description_generated', {
                 "player": ai_player,
-                "description": mock_descriptions[ai_player]
+                "player_description": mock_descriptions[ai_player]
             })
 
     return game_state["descriptions"]
