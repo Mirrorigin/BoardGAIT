@@ -129,8 +129,7 @@ def generate_agent_details(num_players):
 
             # Invoke OpenAI image generation API to generate avatars
             avatar_response = openai.images.generate(
-                prompt=f"Create a pixel-art, gender-neutral avatar portrait or symbol,"
-                       f"reflecting the described style: {style}",
+                prompt=f"Create an image, such as a simple symbol or a small landscape.",
                 n=1,
                 size="256x256",
                 response_format="url"

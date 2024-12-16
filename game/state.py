@@ -28,7 +28,6 @@ game_state = {
 
 # Word library (can be replaced by AI later)
 word_library = [
-    ("apple", "orange"),
     ("cat", "dog"),
     ("sun", "moon"),
     ("table", "chair")
