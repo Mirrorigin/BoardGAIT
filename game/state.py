@@ -2,6 +2,8 @@
 
 import random
 import time
+from utils.ai_api import generate_agent_details
+# from utils.ai_mock import generate_agent_details
 
 # Configurable player numbers
 NUM_PLAYERS = 4  # Default: 4 players
@@ -17,6 +19,8 @@ game_state = {
     "votes": {},
     "eliminated": [],
     "current_turn": 1,
+    "agents": None,
+    "voices": None,
     "active_players": [],
     "game_over": False,
     "winner": None
@@ -30,23 +34,12 @@ word_library = [
     ("table", "chair")
 ]
 
-def generate_agent_details():
-    # Use AI
-    agent_infos = {}
-    agent_avatars = []
-    for i in range(NUM_PLAYERS -1):
-        agent_name = f"Agent_{chr(65 + i)}"
-        agent_infos[agent_name] = f"{agent_name} is active"
-        agent_avatars.append(f"https://via.placeholder.com/150?text={agent_name}")  # Mock avatar URL
-
-    return agent_infos, agent_avatars
-
 def initialize_game():
 
     time.sleep(2)   # mock
 
     # Generate agents
-    agents, avatars = generate_agent_details()
+    agents, avatars, voices = generate_agent_details(NUM_PLAYERS)
 
     # Assign AI Agent names
     agent_names = agents.keys()
@@ -68,6 +61,8 @@ def initialize_game():
     game_state["votes"] = {player: 0 for player in game_state["players"]}
     game_state["eliminated"] = []
     game_state["current_turn"] = 1
+    game_state["agents"] = agents
+    game_state["voices"] = voices
     game_state["active_players"] = game_state["players"].copy()
     game_state["game_over"] = False
     game_state["winner"] = None
@@ -86,6 +81,8 @@ def reset_game_state():
         "votes": {},
         "eliminated": [],
         "current_turn": 1,
+        "agents": None,
+        "voices": None,
         "active_players": [],
         "game_over": False,
         "winner": None

@@ -4,6 +4,17 @@ import time
 import random
 from socketio_config import socketio, app
 
+def generate_agent_details(num_players):
+    # Use AI
+    agent_infos = {}
+    agent_avatars = []
+    for i in range(num_players -1):
+        agent_name = f"Agent_{chr(65 + i)}"
+        agent_infos[agent_name] = f"{agent_name} is active"
+        agent_avatars.append(f"https://via.placeholder.com/150?text={agent_name}")  # Mock avatar URL
+
+    return agent_infos, agent_avatars
+
 def initialize_ai_agent(agent_name, players, word):
     # Mock implementation: simply print the initialization parameters
     print(f"Mock initialize: {agent_name} with players {players} and word {word}")

@@ -5,8 +5,8 @@ import logging
 from flask import Flask, jsonify, request, render_template
 from socketio_config import socketio, app
 from game.state import game_state, initialize_game, reset_game_state
-# from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
-from utils.ai_mock import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
+from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
+# from utils.ai_mock import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
 # from game.logic import handle_describe, handle_vote, handle_eliminate
 
 # Configuration logging

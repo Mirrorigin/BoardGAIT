@@ -1,9 +1,11 @@
 import os
+import random
 from elevenlabs import play
 from elevenlabs.client import ElevenLabs
 
-# ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-client = ElevenLabs()
+elevenlabs_client = ElevenLabs()
+
+__all__ = ["elevenlabs_client"]
 
 def audio_gen(text, voice="Brian"):
     """
@@ -15,7 +17,7 @@ def audio_gen(text, voice="Brian"):
         model (str): The model to use. Default is "eleven_multilingual_v2".
     """
     try:
-        audio = client.generate(
+        audio = elevenlabs_client.generate(
             text=text,
             voice=voice,
             model="eleven_multilingual_v2",

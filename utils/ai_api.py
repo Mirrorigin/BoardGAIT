@@ -1,10 +1,25 @@
 import os
+import requests
+import random
+import openai
 from openai import OpenAI, OpenAIError
-from utils.text_to_speech import audio_gen
+from utils.text_to_speech import audio_gen, elevenlabs_client
 from socketio_config import socketio, app
-# from secret import OPENAI_API_KEY
+from dotenv import load_dotenv
+
+load_dotenv()
 
 openai_client = OpenAI()
+
+# Get all voice in Elevenlabs (language == 'en')
+voices = elevenlabs_client.voices.get_all()
+all_en_voices = []
+for voice_list in voices:
+    for voice_info in voice_list[1]:
+        if voice_info.fine_tuning.language == 'en':
+            all_en_voices.append(voice_info.name)
+
+print(all_en_voices)
 
 SYSTEM_MESSAGE = """
         You are a player in a game called 'Who is the Undercover'.
@@ -21,7 +36,7 @@ SYSTEM_MESSAGE = """
         - If your word differs from others', focus on subtle similarities to blend in without fabricating or misrepresenting your word.
         - During the voting phase, assess other players' descriptions carefully. Look for inconsistencies, overly specific details, or vague statements to identify who might have a different word.
 
-        Main task includes: initialize, describe and vote. Please wait for instructions to act.
+        Your main task includes: initialize, ready, describe and vote. Please wait for instructions to act.
         """
 
 def call_openai_api(task, payload):
@@ -34,6 +49,14 @@ def call_openai_api(task, payload):
     # Generate user messages based on different tasks
     if task == "initialize":
         user_message = f"""
+            Welcome to this game! {payload['context']}
+            Only return the response in the format: {payload['format']}.
+            - Your name should start with "Agent_".
+            - Do NOT add any extra text or comments outside this format.
+            - Example: Agent_Omega, A logical and observant participant with a sharp and analytical speaking style.
+            """
+    elif task == "ready":
+        user_message = f"""
             Game Start and Initialized! Your code name in this game is {payload['agent_name']}.
             Your secret word is: {payload['word']}.
             Other players in the game are: {', '.join(payload['players'])}.
@@ -41,10 +64,17 @@ def call_openai_api(task, payload):
             """
     elif task == "describe":
         user_message = f"""
-                It's your turn for describing, {payload['agent_name']}.
-                Based on the other players' descriptions, generate a creative description for your word {payload['word']}:
-                Current descriptions: {payload['context']}
-                """
+                It's your turn to describe, {payload['agent_name']}.  
+                Your word: {payload['word']}.  
+                Other players' descriptions: {payload['context']}.  
+                
+                Analyze the other players' descriptions carefully to identify any common themes or shared elements. 
+                Think strategically: if your word is different from the majority, avoid revealing it too clearly. 
+                Instead, craft a description that highlights subtle similarities between your word and theirs, 
+                while hiding its unique traits. Write in your unique style: {payload['style']}.
+        
+                Now provide a concise, creative one sentence description that fits your style.
+            """
     elif task == "vote":
         user_message = f"""
                 It's your turn for voting, {payload['agent_name']}.
@@ -73,13 +103,60 @@ def call_openai_api(task, payload):
         print(f"OpenAI API Error: {e}")
         return "Fallback response"
 
+def generate_agent_details(num_players):
+    """
+    Use OpenAI API to generate agent names, descriptions, and avatars.
+    :param num_players: Total number of agents to generate
+    :return: agent_infos, agent_avatars, agent_voices
+    """
+    agent_infos = {}
+    agent_avatars = []
+    agent_voices = {}
+
+    for i in range(num_players-1):
+
+        try:
+            payload = {
+                "context": f"Create a unique and memorable name for yourself, and provide a short description of your "
+                           f"personality and speaking style. Your description should define how you will communicate "
+                           f"throughout the game. Make sure your personality aligns with your language style.",
+                "format": "<Name>, <Personality Description and Language Style>"
+            }
+            agent_details = call_openai_api("initialize", payload)
+            print("Generated agent_details:", agent_details)
+            name, style = map(str.strip, agent_details.split(",", 1))
+            agent_infos[name] = style
+
+            # Invoke OpenAI image generation API to generate avatars
+            avatar_response = openai.images.generate(
+                prompt=f"Create a pixel-art, gender-neutral avatar portrait or symbol,"
+                       f"reflecting the described style: {style}",
+                n=1,
+                size="256x256",
+                response_format="url"
+            )
+            avatar_url = avatar_response.data[0].url
+            print("AVATAR:", avatar_url)
+            agent_avatars.append(avatar_url)
+
+            selected_voice = random.choice(all_en_voices)
+            agent_voices[name] = selected_voice
+            print(f"Selected Voice for {name}: {agent_voices[name]}")
+
+        except Exception as e:
+            print(f"Error generating agent details: {e}")
+
+    print(agent_infos)
+    return agent_infos, agent_avatars, agent_voices
+
+
 def initialize_ai_agent(agent_name, players, word):
     payload = {
         "agent_name": agent_name,
         "players": players,
         "word": word
     }
-    call_openai_api("initialize", payload)
+    call_openai_api("ready", payload)
 
 def generate_ai_descriptions(game_state):
     """
@@ -95,11 +172,13 @@ def generate_ai_descriptions(game_state):
         player_index = game_state["players"].index(ai_player)
         role = game_state["roles"][player_index]
         word = game_state["words"][role]
+        style = game_state["agents"][ai_player]
 
         payload = {
             "agent_name": ai_player,
             "word": word,
-            "context": game_state['descriptions']
+            "context": game_state['descriptions'],
+            "style": style
         }
         ai_descriptions[ai_player] = call_openai_api("describe", payload)
 
@@ -109,16 +188,15 @@ def generate_ai_descriptions(game_state):
                 "player_description": ai_descriptions[ai_player]
             })
         # Play generated audio
-        audio_gen(ai_descriptions[ai_player])
+        audio_gen(ai_descriptions[ai_player], game_state["voices"][ai_player])
 
         # Update game state
         game_state["descriptions"][ai_player] = ai_descriptions[ai_player]
 
     # Check if all AI descriptions are generated, and if so, emit the signal to enable the vote button
-    print(len(ai_descriptions), len(game_state["active_players"]) - 1)
     if len(ai_descriptions) == len(game_state["active_players"]) - 1:
         print("Finished description generation!")
-        socketio.emit('all_descriptions_generated', {'status': 'enable_vote_buttons'})
+        socketio.emit('all_descriptions_generated', {"active_players": game_state["active_players"]})
 
     return game_state["descriptions"]
 

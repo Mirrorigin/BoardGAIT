@@ -183,6 +183,9 @@ function displayAgents(agent_names, agent_infos, agent_avatars, onComplete) {
 }
 
 async function startGame() {
+    const startGameButton = document.getElementById('start-game-button');
+    startGameButton.disabled = true;
+    startGameButton.classList.remove('enabled');
     try {
         const response = await fetch('/start_game', {
             method: 'POST',
@@ -370,6 +373,7 @@ async function vote(target) {
     const voter = playerName;  // Use the global playerName variable
     console.log("You choose:", target)
     showFlashMessage(`You voted for ${target}!`, "success");
+    resetResultsPage();
     fullpage_api.moveTo('results-page');
 
     try {
@@ -386,17 +390,20 @@ async function vote(target) {
 
             if (data.game_status === "exit") {
                 // player eliminated
-                alert(`${playerName}, you have been eliminated. Refresh the page to exit.`);
-            } else if (data.game_status === "win") {    // Win
+                // alert(`${playerName}, you have been eliminated. Refresh the page to exit.`);
+                fullpage_api.moveTo('exit-page');
+            } else if (data.game_status === "win") {
                  fullpage_api.moveTo('win-page');
-            } else {                                    // Next turn
-                showFlashMessage(data.message, "info");
-                fullpage_api.moveTo('description-page');
+            } else {
+                updateResultsPage(data.eliminated);
+                setTimeout(() => {
+                    fullpage_api.moveTo('description-page');
 
-                resetDescriptionInput();
-                disableVotingButtons();
-                clearPreviousRoundData();
-                grayOutInactiveAgents(data.active_players)
+                    resetDescriptionInput();
+                    disableVotingButtons();
+                    clearPreviousRoundData();
+                    grayOutInactiveAgents(data.active_players);
+                }, 3000);
             }
         } else {
             console.error("Vote error:", data.error);
@@ -407,6 +414,23 @@ async function vote(target) {
         showFlashMessage("An error occurred. Please try again.", "error");
     }
 }
+
+function resetResultsPage() {
+    const roundSummary = document.getElementById('round-summary');
+    roundSummary.innerHTML = "";
+}
+
+function updateResultsPage(eliminatedPlayer) {
+    const roundSummary = document.getElementById('round-summary');
+    const eliminatedItem = document.createElement('li');
+    eliminatedItem.textContent = `${eliminatedPlayer} was eliminated.`;
+    roundSummary.appendChild(eliminatedItem);
+
+    const statusItem = document.createElement('li');
+    statusItem.textContent = "The undercover remains hidden!";
+    roundSummary.appendChild(statusItem);
+}
+
 
 function resetDescriptionInput() {
     const descriptionInput = document.getElementById('description-input');
