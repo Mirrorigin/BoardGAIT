@@ -30,8 +30,8 @@ This project is a board game system implemented using generative AI technologies
     export ELEVEN_API_KEY="REPLACE_THIS_LINE_WITH_YOUR_API_KEY"
     export OPENAI_API_KEY="REPLACE_THIS_LINE_WITH_YOUR_API_KEY"
    ```
-   If you don't want to use API key, you can navigate to app.py,
-   commented the first line, and uncommented the second line. This will use mock logics instead of calling API:
+   If you don't want to use API key, you can navigate to **_app.py_**,
+   comment the first line, and uncomment the second line. This will use mock logics instead of calling API:
    ```python
    # from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
    from utils.ai_mock import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
