@@ -2,8 +2,8 @@
 
 import random
 import time
-from utils.ai_api import generate_agent_details
-# from utils.ai_mock import generate_agent_details
+# from utils.ai_api import generate_agent_details
+from utils.ai_mock import generate_agent_details
 
 # Configurable player numbers
 NUM_PLAYERS = 4  # Default: 4 players

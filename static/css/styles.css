@@ -397,7 +397,7 @@ button:disabled {
     height: 50px;
 }
 
-.submit-button {
+.submit-button{
     width: 50px;
     height: 50px;
     border: none;
@@ -409,8 +409,30 @@ button:disabled {
     transition: background-color 0.3s ease;
 }
 
-.submit-button:hover {
+.submit-button:hover{
     background-color: #45a049;
+}
+
+.generate-button {
+    width: 120px;
+    height: 50px;
+    margin-left: 10px; /* Space between buttons */
+    border: none;
+    /*border-radius: 20%;*/
+    background-color: #2196F3;
+    color: white;
+    font-size: 1em;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+
+.generate-button:hover {
+    background-color: #0b7dda;
 }
 
 @media (max-width: 600px) {
@@ -422,10 +444,16 @@ button:disabled {
         font-size: 0.9em;
     }
 
-    .submit-button {
+    .submit-button{
         width: 40px;
         height: 40px;
         font-size: 1.2em;
+    }
+
+    .generate-button {
+        width: 40px;
+        height: 40px;
+        font-size: 1em;
     }
 }
 
