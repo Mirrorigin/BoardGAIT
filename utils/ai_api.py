@@ -62,28 +62,33 @@ def call_openai_api(task, payload):
             Other players in the game are: {', '.join(payload['players'])}.
             Please wait for instructions to describe your word.
             """
+    elif task == "describe_assistance":
+        user_message = f"""
+            Now suppose you are an assistant helping a player in this game. The player's secret word is: "{payload['word']}".
+            Please provide a single sentence hint for the player.
+            """
     elif task == "describe":
         user_message = f"""
-                It's your turn to describe, {payload['agent_name']}.  
-                Your word: {payload['word']}.  
-                Other players' descriptions: {payload['context']}.  
-                
-                Analyze the other players' descriptions carefully to identify any common themes or shared elements. 
-                Think strategically: if your word is different from the majority, avoid revealing it too clearly. 
-                Instead, craft a description that highlights subtle similarities between your word and theirs, 
-                while hiding its unique traits. Write in your unique style: {payload['style']}.
-        
-                Now provide a concise, creative one sentence description that fits your style.
+            It's your turn to describe, {payload['agent_name']}.  
+            Your word: {payload['word']}.  
+            Other players' descriptions: {payload['context']}.  
+            
+            Analyze the other players' descriptions carefully to identify any common themes or shared elements. 
+            Think strategically: if your word is different from the majority, avoid revealing it too clearly. 
+            Instead, craft a description that highlights subtle similarities between your word and theirs, 
+            while hiding its unique traits. Write in your unique style: {payload['style']}.
+    
+            Now provide a concise, creative one sentence description that fits your style.
             """
     elif task == "vote":
         user_message = f"""
-                It's your turn for voting, {payload['agent_name']}.
-                Here are the descriptions from all players:
-                {', '.join([f'{k}: {v}' for k, v in payload['descriptions'].items()])}.
-                Based on these descriptions, vote for the most suspicious player from the following options:
-                {', '.join(payload['options'])}.
-                Return their name only.
-                """
+            It's your turn for voting, {payload['agent_name']}.
+            Here are the descriptions from all players:
+            {', '.join([f'{k}: {v}' for k, v in payload['descriptions'].items()])}.
+            Based on these descriptions, vote for the most suspicious player from the following options:
+            {', '.join(payload['options'])}.
+            Return their name only.
+            """
     else:
         raise ValueError(f"Invalid task: {task}")
 
@@ -156,6 +161,13 @@ def initialize_ai_agent(agent_name, players, word):
         "word": word
     }
     call_openai_api("ready", payload)
+
+def generate_assistance(word):
+    payload = {
+        "word": word,
+    }
+    description = call_openai_api("describe_assistance", payload)
+    return description
 
 def generate_ai_descriptions(game_state):
     """

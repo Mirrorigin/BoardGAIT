@@ -5,8 +5,8 @@ import logging
 from flask import Flask, jsonify, request, render_template
 from socketio_config import socketio, app
 from game.state import game_state, initialize_game, reset_game_state
-from utils.ai_api import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
-# from utils.ai_mock import initialize_ai_agent, generate_ai_descriptions, generate_ai_votes
+# from utils.ai_api import initialize_ai_agent, generate_assistance, generate_ai_descriptions, generate_ai_votes
+from utils.ai_mock import initialize_ai_agent, generate_assistance, generate_ai_descriptions, generate_ai_votes
 # from game.logic import handle_describe, handle_vote, handle_eliminate
 
 # Configuration logging
@@ -83,6 +83,26 @@ def start_game():
         })
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+@app.route('/generate_description', methods=['POST'])
+def generate_description():
+    data = request.get_json()
+    player_name = data.get('player')
+
+    if not player_name:
+        return jsonify({"message": "Player name is required"}), 400
+
+    try:
+        role = game_state["roles"][0]
+        word = game_state["words"][role]
+
+        description = generate_assistance(word)
+
+        return jsonify({"description": description}), 200
+
+    except Exception as e:
+        print(f"Error generating description: {e}")
+        return jsonify({"message": "Error generating description"}), 500
 
 # Players give their description
 @app.route('/describe', methods=['POST'])

@@ -221,6 +221,42 @@ async function startGame() {
     }
 }
 
+async function generateDescription() {
+    const generateButton = document.getElementById('generate-description-button');
+    const descriptionInput = document.getElementById('description-input');
+
+    // Disable button to prevent repeated requests
+    generateButton.disabled = true;
+    generateButton.textContent = "Generating...";
+
+    try {
+        const response = await fetch('/generate_description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ player: playerName })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const aiDescription = data.description;
+
+            // Fill the generated description into the input box
+            descriptionInput.value = aiDescription;
+            showFlashMessage("AI description generated! You can edit it before submitting.", "success");
+        } else {
+            const error = await response.json();
+            showFlashMessage(error.message || "Failed to generate description.", "error");
+        }
+    } catch (error) {
+        console.error("Error generating description:", error);
+        showFlashMessage("An error occurred. Please try again.", "error");
+    } finally {
+        // Re-enable button
+        generateButton.disabled = false;
+        generateButton.textContent = "AI Assist";
+    }
+}
+
 // Function to submit the description
 async function submitDescription() {
 
